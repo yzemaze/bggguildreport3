@@ -1,6 +1,7 @@
 # Get the top games for a BGG Guild
 #
-# This was written for pulling the top games from the Heavy Cardboard BGG Guild.
+# This was written for pulling the top games from the Heavy Cardboard
+# BGG Guild.
 #
 # TODO: Pydoc strings
 # TODO: Refactor user retries
@@ -9,15 +10,17 @@
 
 from boardgamegeek import BGGClient
 from queue import Queue
-import json
+from statistics import mean, stdev
 import csv
-import math
 import datetime
+import json
+import math
 import yaml
 
 HEAVY_CARDBOARD = 2044
 PUNCHING_CARDBOARD = 1805
-CURRENT_GUILD = 1278
+CURRENT_GUILD = 3299    # 2 members
+# CURRENT_GUILD = 2505    # 1 member
 
 # Dictionary Keys
 SORTED_GAMES = "sorted_games"
@@ -26,20 +29,6 @@ TOTAL_GAMES = "total_games_rated"
 GUILD_MEMBER_COUNT = "guild_members"
 MEMBERS = "members"
 TIME = "time_at_generation"
-
-### UTILITY FUNCTIONS ###
-
-
-def mean(numbers):
-    """Return the arithmetic mean of a list of numbers"""
-    return float(sum(numbers)) / float(len(numbers))
-
-
-def stdev(numbers):
-    """Return the population standard deviation of a list of numbers"""
-    avg = mean(numbers)
-    variance = mean([(x - avg)**2 for x in numbers])
-    return math.sqrt(variance)
 
 ### Functions that fetch from BGG ###
 
@@ -156,7 +145,10 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
         for game_id, ratings in guild_ratings.items():
             num_ratings = len(ratings)
             avg_rating = round(mean(ratings), 3)
-            sd_ratings = round(stdev(ratings), 3)
+            if num_ratings > 1:
+                sd_ratings = round(stdev(ratings), 3)
+            else:
+                sd_ratings = 0
             top_games.append((game_id, num_ratings, avg_rating, sd_ratings))
 
         # Sort the list
