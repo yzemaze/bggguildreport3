@@ -9,7 +9,7 @@
 
 from boardgamegeek import BGGClient
 
-from queue import Queue
+from Queue import Queue
 import json
 import csv
 import math
@@ -36,7 +36,7 @@ def mean(numbers):
 def stdev(numbers):
     """Return the population standard deviation of a list of numbers"""
     avg = mean(numbers)
-    variance = mean([(x - avg)**2 for x in numbers])
+    variance = mean(map(lambda x: (x - avg)**2, numbers))
     return math.sqrt(variance)
 
 ### Functions that fetch from BGG ###
@@ -46,7 +46,7 @@ def get_guild_user_list(guild_id, bgg=None):
     if bgg is None:
         bgg = BGGClient()
 
-    print('Fetching guild user list')
+    print 'Fetching guild user list'
     guild = bgg.guild(guild_id)
     return list(guild.members)
 
@@ -69,21 +69,21 @@ def get_game_info(game_id, bgg=None):
     if bgg is None:
         bgg = BGGClient()
 
-    print('Fetching info for game', str(game_id))
+    print 'Fetching info for game', str(game_id)
 
     game = None
     while game is None:
         try:
             game = bgg.game(game_id=game_id)
         except Exception:
-            print('Trying to fetch again...')
+            print 'Trying to fetch again...'
             continue
 
     return game
 
 def add_individual_to_group_ratings(master_dict, user_dict):
     """Combine a user's ratings with the overall ratings"""
-    for game, rating in user_dict.items():
+    for game, rating in user_dict.iteritems():
         if game in master_dict:
             master_dict[game].append(rating)
         else:
@@ -107,15 +107,15 @@ def get_all_ratings(members, bgg=None):
 
     all_member_ratings = dict()
 
-    print('Retrieving user ratings...')
+    print 'Retrieving user ratings...'
     work_queue = Queue()
     for member in members:
         work_queue.put(member)
 
     while not work_queue.empty():
-        print(work_queue.qsize(), 'members to process')
+        print work_queue.qsize(), 'members to process'
         member = work_queue.get()
-        print('Fetching data for ', member)
+        print 'Fetching data for ', member
         try:
             user_ratings = get_user_ratings(member, bgg=bgg)
         except Exception:
@@ -123,13 +123,13 @@ def get_all_ratings(members, bgg=None):
             continue
         all_member_ratings[member] = user_ratings
 
-    print('Ratings retrieved for all users.')
+    print 'Ratings retrieved for all users.'
 
     return all_member_ratings
 
 def collapse_ratings(member_ratings):
     guild_ratings = dict()
-    for _, ratings in member_ratings.items():
+    for _, ratings in member_ratings.iteritems():
         add_individual_to_group_ratings(guild_ratings, ratings)
     return guild_ratings
 
@@ -154,14 +154,14 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
             members = load_members_from_file(users)
 
         guild_size = len(members)
-        print('Members list loaded: %d guild members' % guild_size)
+        print 'Members list loaded: %d guild members' % guild_size
         member_ratings = get_all_ratings(members, bgg=bgg)
         guild_ratings = collapse_ratings(member_ratings)
 
-        print('Processing results...')
-        print('%d games rated' % len(guild_ratings))
+        print 'Processing results...'
+        print '%d games rated' % len(guild_ratings)
         top_games = list()
-        for game_id, ratings in guild_ratings.items():
+        for game_id, ratings in guild_ratings.iteritems():
             num_ratings = len(ratings)
             avg_rating = round(mean(ratings), 3)
             sd_ratings = round(stdev(ratings), 3)
@@ -205,14 +205,14 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
                 elif len(matches) == 0:
                     matched_game = (row[1], gameid, 0, 0, 0)
                 else:
-                    print('ERROR')
+                    print 'ERROR'
                     return
                 pruned_games.append(matched_game)
         pruned_games.sort(key=lambda x: x[3], reverse=True)
         
         max_name_width = max([len(game[0]) for game in pruned_games])
-        format_string_prefix = '{:2} {:'
-        format_string_suffix = '} {:3} {:5.3f} {:5.3f}'
+        format_string_prefix = u'{:2} {:'
+        format_string_suffix = u'} {:3} {:5.3f} {:5.3f}'
         format_string = format_string_prefix + str(max_name_width) + format_string_suffix
         for idx, game in enumerate(pruned_games):
             detail_string = format_string.format(idx + 1,
@@ -220,10 +220,10 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
                     game[2],
                     game[3],
                     game[4])
-            print(detail_string)
+            print detail_string
         return
     else:
-        top_games = [x for x in top_games if x[1] >= 0.1 * member_count]
+        top_games = filter(lambda x: x[1] >= 0.1 * member_count, top_games)
 
     # Get the top 50
     top50 = list()
@@ -281,7 +281,7 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
     lists_dict['most10'] = most10
     json.dump(lists_dict, fi)
 
-    print('Finished')
+    print 'Finished'
 
 if __name__ == '__main__':
     import argparse

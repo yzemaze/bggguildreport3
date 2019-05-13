@@ -14,7 +14,7 @@ def main(old_file, new_file):
     old_top50_gameids = [x[1] for x in old_top50]
 
     name_width = max([len(x[0]) for x in new_top50])
-    format_string = "{:2} ({:3}). {:" + str(name_width) + "} {:3} {:5.3f} {:5.3f}"
+    format_string = u"{:2} ({:3}). {:" + str(name_width) + u"} {:3} {:5.3f} {:5.3f}"
 
     for index, game_info in enumerate(new_top50):
         try:
@@ -37,7 +37,7 @@ def main(old_file, new_file):
                 game_info[2],
                 game_info[3],
                 game_info[4])
-        print(detail_string)
+        print detail_string
 
 if __name__ == '__main__':
     import argparse

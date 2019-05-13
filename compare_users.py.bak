@@ -12,17 +12,17 @@ def main(user, member_data_file):
     user_collection_size = len(user_data)
 
     member_scores = list()
-    for user, ratings in member_data.items():
+    for user, ratings in member_data.iteritems():
         score = 0
         games_in_common = 0
-        for game, rating in user_data.items():
+        for game, rating in user_data.iteritems():
             if game in ratings:
                 diff = (rating - ratings[game])**2
                 score += diff
                 games_in_common += 1
         member_scores.append({'user': user, 'score': score, 'common': games_in_common})
 
-    member_scores = [x for x in member_scores if x['common'] >= 0.5 * user_collection_size]
+    member_scores = filter(lambda x: x['common'] >= 0.5 * user_collection_size, member_scores)
     member_scores.sort(key=lambda x: x['score'])
 
     filename = user + '_followers.yml'
@@ -31,7 +31,7 @@ def main(user, member_data_file):
 
     for i in range(5):
         member = member_scores[i]
-        print(member['user'], member['score'], member['common'])
+        print member['user'], member['score'], member['common']
 
 
 if __name__ == '__main__':
