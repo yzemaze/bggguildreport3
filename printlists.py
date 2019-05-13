@@ -53,7 +53,6 @@ if __name__ == "__main__":
     parser.add_argument("--style", type=str,
                         help="output format: bbcode|bgg|html - default: html")
     args = parser.parse_args()
-
     with open(args.filename) as f:
         data = json.load(f)
         f.close()
