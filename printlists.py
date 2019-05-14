@@ -1,11 +1,15 @@
 import argparse
 import datetime
+import gettext
 import json
+_ = gettext.gettext
 
 
 def print_list(category, headline, style):
+    """Print list per category in given style to file."""
     hlevel = "h3"
-    ths = ["Nr.", "Titel", "Bewertungen", "Mittelwert", "StdAbw"]
+    ths = [_("No."), _("Game"), _("Ratings"), _("Mean"), _("Stdev")]
+    #ths = ["Nr.", "Titel", "Bewertungen", "Mittelwert", "StdAbw"]
     json_data = data[category]
     if style == "html":
         print("<", hlevel, ">", headline, "</", hlevel, ">", sep="", file=of)
@@ -36,8 +40,8 @@ def print_list(category, headline, style):
         format_string_prefix = u"{:2} {:"
         format_string_ext = u"} {:3} {:5.3f} {:5.3f}"
         max_name_width = max([len(game[0]) for game in json_data])
-        format_string = format_string_prefix + \
-            str(max_name_width) + format_string_ext
+        format_string = format_string_prefix \
+            + str(max_name_width) + format_string_ext
         print("[c]", headline, sep="", file=of)
         for idx, game in enumerate(json_data):
             detail_string = format_string.format(
@@ -45,14 +49,20 @@ def print_list(category, headline, style):
             print(detail_string, file=of)
         print("[/c]", file=of)
 
+
 if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description="Process file to print in a pretty format")
-    parser.add_argument("filename", type=str, help="file to format")
-    parser.add_argument("--style", type=str,
-                        help="output format: bbcode|bgg|html - default: html")
+    parser.add_argument(
+        "filename",
+        help="file to format")
+    parser.add_argument(
+        "--style",
+        default="html",
+        help="output format: bbcode|bgg|html - default: html")
     args = parser.parse_args()
+
     with open(args.filename) as f:
         data = json.load(f)
         f.close()
@@ -63,9 +73,11 @@ if __name__ == "__main__":
         else:
             style = "html"
             ext = "html"
+
         with open("output_" + date_str + "." + ext, "w") as of:
-            headlines = ["Top50", "Bottom 10",
-                         "Max. Abweichung", "Meistbewertet"]
+            headlines = [
+                _("Top 50"), _("Bottom 10"),
+                _("Most Varied"), _("Most Ratings")]
             top50 = data["top50"]
             print_list("top50", headlines[0], style)
             bottom10 = data["bottom10"]
