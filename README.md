@@ -1,4 +1,4 @@
-# bggguildreport2
+# bggguildreport3
 Scripts for generating top 50 etc. lists for guilds or lists of users on
 BoardGameGeek
 
