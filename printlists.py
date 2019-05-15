@@ -2,7 +2,6 @@ import argparse
 import datetime
 import gettext
 import json
-_ = gettext.gettext
 
 
 def print_list(category, headline, style):
@@ -61,7 +60,16 @@ if __name__ == "__main__":
         "--style",
         default="html",
         help="output format: bbcode|bgg|html - default: html")
+    parser.add_argument(
+        "--lang",
+        default="en",
+        help="language used for headlines and tableheaders")
     args = parser.parse_args()
+
+    lang = gettext.translation("base", localedir="locales",
+                               languages=[args.lang])
+    lang.install()
+    _ = lang.gettext
 
     with open(args.filename) as f:
         data = json.load(f)

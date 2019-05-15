@@ -8,14 +8,15 @@
 # TODO: Implement pastable report
 # TODO: Remove dependency on boardgamegeek module to make better queries
 
-from boardgamegeek import BGGClient
-from queue import Queue
-from statistics import mean, stdev
 import csv
 import datetime
 import json
 import math
+from queue import Queue
+from statistics import mean, stdev
 import yaml
+
+from boardgamegeek import BGGClient
 
 HEAVY_CARDBOARD = 2044
 PUNCHING_CARDBOARD = 1805
