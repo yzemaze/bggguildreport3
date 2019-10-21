@@ -1,0 +1,53 @@
+# bggguildereport3 DE strings
+# Copyright (C) 2019
+# yzemaze <git@yzemaze.de>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 732b960\n"
+"POT-Creation-Date: 2019-05-14 13:59+CEST\n"
+"PO-Revision-Date: 2019-05-14 14:15+CEST\n"
+"Last-Translator: yzemaze <git@yzemaze.de>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: printlists.py:11
+msgid "Game"
+msgstr "Spiel"
+
+#: printlists.py:11
+msgid "Mean"
+msgstr "Mittelwert"
+
+#: printlists.py:11
+msgid "No."
+msgstr "Nr."
+
+#: printlists.py:11
+msgid "Ratings"
+msgstr "Bewertungen"
+
+#: printlists.py:11
+msgid "Stdev"
+msgstr "Stdabw"
+
+#: printlists.py:79
+msgid "Bottom 10"
+msgstr "Bottom 10"
+
+#: printlists.py:79
+msgid "Top 50"
+msgstr "Top 50"
+
+#: printlists.py:80
+msgid "Most Ratings"
+msgstr "Meiste Bewertungen"
+
+#: printlists.py:80
+msgid "Most Varied"
+msgstr "Max. Abweichung"
+
