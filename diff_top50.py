@@ -19,6 +19,7 @@ def print_list(old_file, new_file, style):
             old_top50_means = [x[3] for x in old_top50]
 
             hlevel = "h3"
+            headline = _("Top50 Diff")
             ths = [
                 _("No."),
                 _("+/-"),
@@ -28,10 +29,28 @@ def print_list(old_file, new_file, style):
                 _("+/-"),
                 _("Stdev")]
 
-            name_width = max([len(x[0]) for x in new_top50])
-            format_string = "{:2} ({:3}). {:" + str(name_width) + \
-                "} {:3} {:5.3f} {:6.3f} {:5.3f}"
+            # table header
+            if style == "html":
+                print("<", hlevel, ">", headline, "</", hlevel, ">",
+                      sep="", file=of)
+                print("<table id=", headline, "><thead><tr>",
+                      sep="", file=of)
+                for i, th in enumerate(ths):
+                    print("<th>", th, "</th>", sep="", file=of)
+                print("</tr></thead><tbody>", sep="", file=of)
+            elif style == "bbcode":
+                print("[", hlevel, "]", headline,
+                      "[/", hlevel, "]", sep="", file=of)
+                print("[table][tr]", sep="", file=of)
+                for i, th in enumerate(ths):
+                    print("[th]", th, "[/th]", sep="", file=of)
+                print("[/tr]", sep="", file=of)
+            else:
+                name_width = max([len(x[0]) for x in new_top50])
+                format_string = "{:2} ({:3}) {:" + str(name_width) + \
+                    "} {:3} {:5.3f} {:6.3f} {:5.3f}"
 
+            # table content
             for index, game_info in enumerate(new_top50):
                 try:
                     old_index = old_top50_gameids.index(game_info[1])
@@ -50,14 +69,35 @@ def print_list(old_file, new_file, style):
                     diff_string = "new"
                     diff_mean = 0
 
-                detail_string = format_string.format(index + 1,
-                                                     diff_string,
-                                                     game_info[0],
-                                                     game_info[2],
-                                                     game_info[3],
-                                                     diff_mean,
-                                                     game_info[4])
-                print(detail_string, file=of)
+                table_row_data = (index + 1, diff_string, game_info[0],
+                                  game_info[2], game_info[3], diff_mean,
+                                  game_info[4])
+
+                if style == "html":
+                    print("<tr><td>{}</td><td>{}</td><td>{}</td> \
+                        <td>{}</td><td>{:5.3f}</td><td>{:5.3f}</td> \
+                        <td>{:5.3f}</td></tr>".format(
+                        *table_row_data), file=of)
+                elif style == "bbcode":
+                    print("[tr][td]{}[/td][td]{}[/td][td]{}[/td] \
+                        [td]{}[/td][td]{:5.3f}[/td][td]{:5.3f}[/td] \
+                        [td]{:5.3f}[/td][/tr]".format(
+                        *table_row_data), file=of)
+                else:
+                    detail_string = format_string.format(index + 1,
+                                                         diff_string,
+                                                         game_info[0],
+                                                         game_info[2],
+                                                         game_info[3],
+                                                         diff_mean,
+                                                         game_info[4])
+                    print(detail_string, file=of)
+
+            # table footer
+            if style == "html":
+                print("</tbody></table>", file=of)
+            elif style == "bbcode":
+                print("[/table]", file=of)
 
 if __name__ == "__main__":
     # parse arguments
