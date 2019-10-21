@@ -74,9 +74,13 @@ def print_list(old_file, new_file, style):
                                   game_info[4])
 
                 if style == "html":
-                    print("<tr><td>{}</td><td>{}</td><td>{}</td> \
-                        <td>{}</td><td>{:5.3f}</td><td>{:5.3f}</td> \
-                        <td>{:5.3f}</td></tr>".format(
+                    print("<tr><td style=\"text-align: right\">{}</td> \
+                        <td style=\"text-align: right\">{}</td><td>{}</td> \
+                        <td>{}</td> \
+                        <td style=\"text-align: right\">{:5.3f}</td> \
+                        <td style=\"text-align: right\">{:5.3f}</td> \
+                        <td style=\"text-align: right\">{:5.3f}</td> \
+                        </tr>".format(
                         *table_row_data), file=of)
                 elif style == "bbcode":
                     print("[tr][td]{}[/td][td]{}[/td][td]{}[/td] \
@@ -113,7 +117,7 @@ if __name__ == "__main__":
         help="language used for headlines and tableheaders")
     args = parser.parse_args()
 
-    lang = gettext.translation("base", localedir="locales",
+    lang = gettext.translation("diff_top50", localedir="locales",
                                languages=[args.lang])
     lang.install()
     _ = lang.gettext

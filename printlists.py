@@ -8,7 +8,7 @@ def print_list(category, headline, style):
     """Print list per category in given style to file."""
     hlevel = "h3"
     ths = [_("No."), _("Game"), _("Ratings"), _("Mean"), _("Stdev")]
-    #ths = ["Nr.", "Titel", "Bewertungen", "Mittelwert", "StdAbw"]
+
     json_data = data[category]
     if style == "html":
         print("<", hlevel, ">", headline, "</", hlevel, ">", sep="", file=of)
@@ -27,7 +27,7 @@ def print_list(category, headline, style):
         print("[table][tr]", sep="", file=of)
         for i, th in enumerate(ths):
             print("[th]", th, "[/th]", sep="", file=of)
-        print("[/tr][/table]", sep="", file=of)
+        print("[/tr]", sep="", file=of)
         for idx, game in enumerate(json_data):
             table_row_data = (idx + 1, game[0], game[2], game[3], game[4])
             print("[tr][td]{:2}[/td][td]{}[/td][td]{:2}[/td] \
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         help="language used for headlines and tableheaders")
     args = parser.parse_args()
 
-    lang = gettext.translation("base", localedir="locales",
+    lang = gettext.translation("printlists", localedir="locales",
                                languages=[args.lang])
     lang.install()
     _ = lang.gettext
