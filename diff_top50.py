@@ -17,6 +17,7 @@ def print_list(old_file, new_file, style):
             old_top50 = old_lists["top50"]
             old_top50_gameids = [x[1] for x in old_top50]
             old_top50_means = [x[3] for x in old_top50]
+            old_top50_ratings = [x[2] for x in old_top50]
 
             hlevel = "h3"
             headline = _("Top50 Diff")
@@ -25,6 +26,7 @@ def print_list(old_file, new_file, style):
                 _("+/-"),
                 _("Game"),
                 _("Ratings"),
+                _("+"),
                 _("Mean"),
                 _("+/-"),
                 _("Stdev")]
@@ -48,7 +50,8 @@ def print_list(old_file, new_file, style):
             else:
                 name_width = max([len(x[0]) for x in new_top50])
                 format_string = "{:2} ({:3}) {:" + str(name_width) + \
-                    "} {:3} {:5.3f} {:6.3f} {:5.3f}"
+                    "} {:3} {:4} {:5.3f} {:6.3f} {:5.3f}"
+                print(format_string.format(ths), file=of)
 
             # table content
             for index, game_info in enumerate(new_top50):
@@ -59,6 +62,8 @@ def print_list(old_file, new_file, style):
 
                 if old_index > -1:
                     diff = old_index - index
+                    diff_ratings = game_info[2] - \
+                        old_top50_ratings[old_index]
                     diff_mean = game_info[3] - \
                         old_top50_means[old_index]
                     if diff > -1:
@@ -66,26 +71,35 @@ def print_list(old_file, new_file, style):
                     else:
                         diff_string = str(diff)
                 else:
-                    diff_string = "new"
+                    diff_string = _("new")
                     diff_mean = 0
+                    diff_ratings = game_info[2]
 
                 table_row_data = (index + 1, diff_string, game_info[0],
-                                  game_info[2], game_info[3], diff_mean,
-                                  game_info[4])
+                                  game_info[2], diff_ratings,
+                                  game_info[3], diff_mean, game_info[4])
 
                 if style == "html":
                     print("<tr><td style=\"text-align: right\">{}</td> \
-                        <td style=\"text-align: right\">{}</td><td>{}</td> \
+                        <td style=\"text-align: right\">{}</td> \
                         <td>{}</td> \
+                        <td>{:4}</td> \
+                        <td style=\"text-align: right\">{:4}</td> \
                         <td style=\"text-align: right\">{:5.3f}</td> \
-                        <td style=\"text-align: right\">{:5.3f}</td> \
+                        <td style=\"text-align: right\">{:6.3f}</td> \
                         <td style=\"text-align: right\">{:5.3f}</td> \
                         </tr>".format(
                         *table_row_data), file=of)
                 elif style == "bbcode":
-                    print("[tr][td]{}[/td][td]{}[/td][td]{}[/td] \
-                        [td]{}[/td][td]{:5.3f}[/td][td]{:5.3f}[/td] \
-                        [td]{:5.3f}[/td][/tr]".format(
+                    print("[tr][td]{}[/td] \
+                        [td]{}[/td] \
+                        [td]{}[/td] \
+                        [td]{:4}[/td] \
+                        [td]{:4}[/td] \
+                        [td]{:5.3f}[/td] \
+                        [td]{:6.3f}[/td] \
+                        [td]{:5.3f}[/td] \
+                        [/tr]".format(
                         *table_row_data), file=of)
                 else:
                     detail_string = format_string.format(*table_row_data)

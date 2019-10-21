@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
 "POT-Creation-Date: 2019-10-21 22:29+CEST\n"
-"PO-Revision-Date: 2019-10-21 22:34+CEST\n"
+"PO-Revision-Date: 2019-10-21 23:03+CEST\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -35,6 +35,9 @@ msgstr "Spiel"
 msgid "Ratings"
 msgstr "Bewertungen"
 
+msgid "+"
+msgstr "+"
+
 #: diff_top50.py:28
 msgid "Mean"
 msgstr "Mittelwert"
@@ -42,3 +45,6 @@ msgstr "Mittelwert"
 #: diff_top50.py:30
 msgid "Stdev"
 msgstr "Stdabw"
+
+msgid "new"
+msgstr "neu"

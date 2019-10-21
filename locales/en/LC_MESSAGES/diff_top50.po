@@ -42,3 +42,9 @@ msgstr ""
 #: diff_top50.py:30
 msgid "Stdev"
 msgstr ""
+
+msgid "+"
+msgstr ""
+
+msgid "new"
+msgstr ""
