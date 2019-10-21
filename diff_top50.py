@@ -84,13 +84,7 @@ def print_list(old_file, new_file, style):
                         [td]{:5.3f}[/td][/tr]".format(
                         *table_row_data), file=of)
                 else:
-                    detail_string = format_string.format(index + 1,
-                                                         diff_string,
-                                                         game_info[0],
-                                                         game_info[2],
-                                                         game_info[3],
-                                                         diff_mean,
-                                                         game_info[4])
+                    detail_string = format_string.format(*table_row_data)
                     print(detail_string, file=of)
 
             # table footer
