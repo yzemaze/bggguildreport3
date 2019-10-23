@@ -33,6 +33,9 @@ def print_list(old_file, new_file, style):
 
             # table header
             if style == "html":
+                print("<style>\n\
+                    .numbers {text-align: right; padding: 0 5px;}\n\
+                    </style>", file=of)
                 print("<", hlevel, ">", headline, "</", hlevel, ">",
                       sep="", file=of)
                 print("<table id=", headline, "><thead><tr>",
@@ -50,7 +53,7 @@ def print_list(old_file, new_file, style):
             else:
                 name_width = max([len(x[0]) for x in new_top50])
                 format_string = "{:2} ({:3}) {:" + str(name_width) + \
-                    "} {:3} {:4} {:5.3f} {:6.3f} {:5.3f}"
+                    "} {:3} {:6} {:5.3f} {:6} {:5.3f}"
                 print(format_string.format(ths), file=of)
 
             # table content
@@ -66,28 +69,27 @@ def print_list(old_file, new_file, style):
                         old_top50_ratings[old_index]
                     diff_mean = game_info[3] - \
                         old_top50_means[old_index]
-                    if diff > -1:
-                        diff_string = "+" + str(diff)
-                    else:
-                        diff_string = str(diff)
+                    diff_string = "({:+})".format(diff)
+                    diff_ratings = "({:+})".format(diff_ratings)
+                    diff_mean = "({:+.3f})".format(diff_mean)
                 else:
-                    diff_string = _("new")
-                    diff_mean = 0
-                    diff_ratings = game_info[2]
+                    diff_string = "(" + _("new") + ")"
+                    diff_mean = ""
+                    diff_ratings = ""
 
                 table_row_data = (index + 1, diff_string, game_info[0],
                                   game_info[2], diff_ratings,
                                   game_info[3], diff_mean, game_info[4])
 
                 if style == "html":
-                    print("<tr><td style=\"text-align: right\">{}</td> \
-                        <td style=\"text-align: right\">{}</td> \
+                    print("<tr><td class=\"numbers\">{}</td> \
+                        <td class=\"numbers\">{}</td> \
                         <td>{}</td> \
-                        <td>{:4}</td> \
-                        <td style=\"text-align: right\">{:4}</td> \
-                        <td style=\"text-align: right\">{:5.3f}</td> \
-                        <td style=\"text-align: right\">{:6.3f}</td> \
-                        <td style=\"text-align: right\">{:5.3f}</td> \
+                        <td class=\"numbers\">{:4}</td> \
+                        <td class=\"numbers\">{}</td> \
+                        <td class=\"numbers\">{:5.3f}</td> \
+                        <td class=\"numbers\">{}</td> \
+                        <td class=\"numbers\">{:5.3f}</td> \
                         </tr>".format(
                         *table_row_data), file=of)
                 elif style == "bbcode":
@@ -95,9 +97,9 @@ def print_list(old_file, new_file, style):
                         [td]{}[/td] \
                         [td]{}[/td] \
                         [td]{:4}[/td] \
-                        [td]{:4}[/td] \
+                        [td]{}[/td] \
                         [td]{:5.3f}[/td] \
-                        [td]{:6.3f}[/td] \
+                        [td]{}[/td] \
                         [td]{:5.3f}[/td] \
                         [/tr]".format(
                         *table_row_data), file=of)

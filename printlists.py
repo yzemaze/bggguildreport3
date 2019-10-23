@@ -41,7 +41,7 @@ def print_list(category, headline, style):
         max_name_width = max([len(game[0]) for game in json_data])
         format_string = format_string_prefix \
             + str(max_name_width) + format_string_ext
-        print("[c]", headline, sep="", file=of)
+        print("\n[b]", headline, "[/b]\n[c]", sep="", file=of)
         for idx, game in enumerate(json_data):
             detail_string = format_string.format(
                 idx + 1, game[0], game[2], game[3], game[4])
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         with open("output_" + date_str + "." + ext, "w") as of:
             headlines = [
                 _("Top 50"), _("Bottom 10"),
-                _("Most Varied"), _("Most Ratings")]
+                _("Most Varied"), _("Most Rated")]
             top50 = data["top50"]
             print_list("top50", headlines[0], style)
             bottom10 = data["bottom10"]

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
-"POT-Creation-Date: 2019-10-21 22:28+CEST\n"
-"PO-Revision-Date: 2019-10-21 22:34+CEST\n"
+"POT-Creation-Date: 2019-05-14 13:59+CEST\n"
+"PO-Revision-Date: 2019-10-22 16:10+CEST\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -44,7 +44,7 @@ msgid "Top 50"
 msgstr ""
 
 #: printlists.py:88
-msgid "Most Ratings"
+msgid "Most Rated"
 msgstr ""
 
 #: printlists.py:88

@@ -20,7 +20,9 @@ from boardgamegeek import BGGClient
 
 HEAVY_CARDBOARD = 2044
 PUNCHING_CARDBOARD = 1805
-CURRENT_GUILD = 3299    # 2 members
+UNKNOWNS = 3422
+CURRENT_GUILD = UNKNOWNS
+# CURRENT_GUILD = 3299    # 3 members
 # CURRENT_GUILD = 2505    # 1 member
 
 # Dictionary Keys
