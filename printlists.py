@@ -18,8 +18,10 @@ def print_list(category, headline, style):
         print("</tr></thead><tbody>", sep="", file=of)
         for idx, game in enumerate(json_data):
             table_row_data = (idx + 1, game[0], game[2], game[3], game[4])
-            print("<tr><td>{:2}</td><td>{}</td><td>{:2}</td> \
-                <td>{:5.3f}</td><td>{:5.3f}</td></tr>".format(
+            print("<tr><td class=\"text-right\">{:2}</td> \
+                <td>{}</td><td class=\"text-right\">{:2}</td> \
+                <td class=\"text-right\">{:5.3f}</td> \
+                <td class=\"text-right\">{:5.3f}</td></tr>".format(
                 *table_row_data), file=of)
         print("</tbody></table>", file=of)
     elif style == "bbcode":
@@ -86,6 +88,10 @@ if __name__ == "__main__":
             headlines = [
                 _("Top 50"), _("Bottom 10"),
                 _("Most Varied"), _("Most Rated")]
+            if style == "html":
+                print("<style>\n\
+    .text-right {text-align: right; padding: 0 5px;}\n\
+</style>", file=of)
             top50 = data["top50"]
             print_list("top50", headlines[0], style)
             bottom10 = data["bottom10"]

@@ -34,7 +34,7 @@ def print_list(old_file, new_file, style):
             # table header
             if style == "html":
                 print("<style>\n\
-                    .numbers {text-align: right; padding: 0 5px;}\n\
+                    .text-right {text-align: right; padding: 0 5px;}\n\
                     </style>", file=of)
                 print("<", hlevel, ">", headline, "</", hlevel, ">",
                       sep="", file=of)
@@ -82,14 +82,14 @@ def print_list(old_file, new_file, style):
                                   game_info[3], diff_mean, game_info[4])
 
                 if style == "html":
-                    print("<tr><td class=\"numbers\">{}</td> \
-                        <td class=\"numbers\">{}</td> \
+                    print("<tr><td class=\"text-right\">{}</td> \
+                        <td class=\"text-right\">{}</td> \
                         <td>{}</td> \
-                        <td class=\"numbers\">{:4}</td> \
-                        <td class=\"numbers\">{}</td> \
-                        <td class=\"numbers\">{:5.3f}</td> \
-                        <td class=\"numbers\">{}</td> \
-                        <td class=\"numbers\">{:5.3f}</td> \
+                        <td class=\"text-right\">{:4}</td> \
+                        <td class=\"text-right\">{}</td> \
+                        <td class=\"text-right\">{:5.3f}</td> \
+                        <td class=\"text-right\">{}</td> \
+                        <td class=\"text-right\">{:5.3f}</td> \
                         </tr>".format(
                         *table_row_data), file=of)
                 elif style == "bbcode":
