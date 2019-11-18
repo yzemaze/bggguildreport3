@@ -26,10 +26,10 @@ def print_list(old_file, new_file, style):
                 _("+/-"),
                 _("Game"),
                 _("Ratings"),
-                _("+"),
+                _("+/-"),
                 _("Mean"),
                 _("+/-"),
-                _("Stdev")]
+                _("SD")]
 
             # table header
             if style == "html":
@@ -52,9 +52,18 @@ def print_list(old_file, new_file, style):
                 print("[/tr]", sep="", file=of)
             else:
                 name_width = max([len(x[0]) for x in new_top50])
-                format_string = "{:2} ({:3}) {:" + str(name_width) + \
-                    "} {:3} {:6} {:5.3f} {:6} {:5.3f}"
-                print(format_string.format(ths), file=of)
+                ratings_width = max(len(ths[3]), 4)
+                mean_width = max(len(ths[5]), 5)
+                sd_width = max(len(ths[7]), 5)
+                format_string = "{:3} {:5} {:" + str(name_width) + "}" \
+                    " {:" + str(ratings_width) + "} {:6}" + \
+                    " {:" + str(mean_width) + ".3f} {:8}" + \
+                    " {:" + str(sd_width) + ".3f}"
+                format_headers = "{:3} {:5} {:" + str(name_width) + "}" \
+                    " {:" + str(ratings_width) + "} {:6}" + \
+                    " {:" + str(mean_width) + "} {:8}" + \
+                    " {:" + str(sd_width) + "}"
+                print(format_headers.format(*ths), file=of)
 
             # table content
             for index, game_info in enumerate(new_top50):
@@ -69,8 +78,8 @@ def print_list(old_file, new_file, style):
                         old_top50_ratings[old_index]
                     diff_mean = game_info[3] - \
                         old_top50_means[old_index]
-                    diff_string = "({:+})".format(diff)
-                    diff_ratings = "({:+})".format(diff_ratings)
+                    diff_string = "({:>+3})".format(diff)
+                    diff_ratings = "({:>+3})".format(diff_ratings)
                     diff_mean = "({:+.3f})".format(diff_mean)
                 else:
                     diff_string = "(" + _("new") + ")"
