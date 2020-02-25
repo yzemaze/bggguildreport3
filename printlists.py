@@ -87,7 +87,7 @@ if __name__ == "__main__":
         with open("output_" + date_str + "." + ext, "w") as of:
             headlines = [
                 _("Top 50"), _("Bottom 10"),
-                _("Most Varied"), _("Most Rated")]
+                _("Most Varied"), _("Most Similar"), _("Most Rated")]
             if style == "html":
                 print("<style>\n\
     .text-right {text-align: right; padding: 0 5px;}\n\
@@ -98,6 +98,8 @@ if __name__ == "__main__":
             print_list("bottom10", headlines[1], style)
             variable10 = data["variable10"]
             print_list("variable10", headlines[2], style)
+            similar10 = data["similar10"]
+            print_list("similar10", headlines[3], style)
             most10 = data["most10"]
-            print_list("most10", headlines[3], style)
+            print_list("most10", headlines[4], style)
             of.close()

@@ -18,12 +18,10 @@ import yaml
 
 from boardgamegeek import BGGClient
 
+# guild ids
 HEAVY_CARDBOARD = 2044
 PUNCHING_CARDBOARD = 1805
 UNKNOWNS = 3422
-CURRENT_GUILD = UNKNOWNS
-# CURRENT_GUILD = 3299    # 3 members
-# CURRENT_GUILD = 2505    # 1 member
 
 # Dictionary Keys
 SORTED_GAMES = "sorted_games"
@@ -36,34 +34,35 @@ TIME = "time_at_generation"
 ### Functions that fetch from BGG ###
 
 
-def get_guild_user_list(guild_id, bgg=None):
+def get_guild_user_list(guild_id, bgg=False):
     """Fetch the member list for a BGG Guild"""
-    if bgg is None:
+    if bgg is False:
         bgg = BGGClient()
     print("Fetching guild user list")
     guild = bgg.guild(guild_id)
     return list(guild.members)
 
 
-def get_user_ratings(username, bgg=None):
+def get_user_ratings(username, bgg=False):
     """Returns a dict: gameid -> rating"""
-    if bgg is None:
+    if bgg is False:
         bgg = BGGClient()
-    collection = bgg.collection(username)
     user_ratings = dict()
+    collection = bgg.collection(username)
+    print(collection)
     for item in collection:
         if item.rating:
             user_ratings[item.id] = item.rating
     return user_ratings
 
 
-def get_game_info(game_id, bgg=None):
+def get_game_info(game_id, bgg=False):
     """Fetch the BGG info for game having game_id"""
-    if bgg is None:
+    if bgg is False:
         bgg = BGGClient()
     print("Fetching info for game", str(game_id))
-    game = None
-    while game is None:
+    game = False
+    while game is False:
         try:
             game = bgg.game(game_id=game_id)
         except Exception:
@@ -89,15 +88,17 @@ def load_members_from_file(filename):
     return members
 
 
-def get_all_ratings(members, bgg=None):
+def get_all_ratings(members, bgg=False):
     """Get the ratings for all users in the list members.
         Returns: A dict (gameid, game name) -> list of ratings
     """
-    if bgg is None:
+    if bgg is False:
         bgg = BGGClient()
     all_member_ratings = dict()
     print("Retrieving user ratings...")
     work_queue = Queue()
+    retry_queue = Queue()
+    fails = list()
     for member in members:
         work_queue.put(member)
     while not work_queue.empty():
@@ -107,10 +108,21 @@ def get_all_ratings(members, bgg=None):
         try:
             user_ratings = get_user_ratings(member, bgg=bgg)
         except Exception:
-            work_queue.put(member)
+            retry_queue.put(member)
             continue
         all_member_ratings[member] = user_ratings
-    print("Ratings retrieved for all users.")
+    while not retry_queue.empty():
+        print(retry_queue.qsize(), "members to process")
+        member = retry_queue.get()
+        print("Fetching data for ", member)
+        try:
+            user_ratings = get_user_ratings(member, bgg=bgg)
+        except Exception:
+            print("No data available for ", member)
+            fails.append(member)
+            continue
+        all_member_ratings[member] = user_ratings
+    print("Ratings retrieved for all users except", fails)
     return all_member_ratings
 
 
@@ -121,24 +133,47 @@ def collapse_ratings(member_ratings):
     return guild_ratings
 
 
-def main(users=None, raw_data=None, generate_report=False, prune=None):
+def main(concat=False, guild="pc", users=False, raw_data=False, prune=False):
+    if users is False:
+        if guild == "hc":
+            guild_id = HEAVY_CARDBOARD
+        elif guild == "pc":
+            guild_id = PUNCHING_CARDBOARD
+        elif guild == "uk":
+            guild_id = UNKNOWNS
+        else:
+            guild_id = guild
+        print("Guild:", guild, "=> id:", guild_id)
     bgg = BGGClient()
     # if not users and not raw_data: get users, get user ratings, process ratings
     # if users and not raw_data: load users, get user ratings, process ratings
     # if raw data: load users, load user ratings, process ratings
     date_str = datetime.datetime.now().strftime("%Y%m%d")
-    if raw_data is None:
-        # load members from file or query for current list
-        if users is None:
-            members = get_guild_user_list(CURRENT_GUILD, bgg=bgg)
+    if raw_data is False:
+        if concat is False:
+            # load members from file or query for current list
+            if users is False:
+                members = get_guild_user_list(guild_id, bgg=bgg)
+                of = open("members_" + date_str + ".txt", "w")
+                for member in members:
+                    of.write(member + "\n")
+            else:
+                members = load_members_from_file(users)
+                members = [member.lower() for member in members]
+                members = sorted(set(members))
+        else:
+            # concatenate members from file and guild members
+            members_file = load_members_from_file(users)
+            members_guild = get_guild_user_list(guild_id, bgg=bgg)
+            members = members_file + members_guild
+            members = [member.lower() for member in members]
+            members = sorted(set(members))
             of = open("members_" + date_str + ".txt", "w")
             for member in members:
                 of.write(member + "\n")
-        else:
-            members = load_members_from_file(users)
 
         guild_size = len(members)
-        print("Members list loaded: %d guild members" % guild_size)
+        print("Members list loaded: %d members" % guild_size)
         member_ratings = get_all_ratings(members, bgg=bgg)
         guild_ratings = collapse_ratings(member_ratings)
 
@@ -171,7 +206,7 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
         with open("member_data_" + date_str + ".yml", "w") as raw_data_file:
             yaml.dump(member_ratings, raw_data_file)
 
-    elif raw_data is not None:
+    elif raw_data is not False:
         rating_data = json.load(open(raw_data, "r"))
 
     # Either path we now have rating_data
@@ -179,7 +214,7 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
     member_count = rating_data[SUMMARY][GUILD_MEMBER_COUNT]
 
     # If we want to prune the games
-    if prune is not None:
+    if prune is True:
         pruned_games = list()
         with open(prune, "r") as f:
             reader = csv.reader(f)
@@ -249,6 +284,18 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
                 (game_info.name, game[0], game[1], game[2], game[3]))
         if count_of_printed > 9:
             break
+    # Get the least variable
+    similar10 = list()
+    top_games.sort(key=lambda x: x[3], reverse=False)
+    count_of_printed = 0
+    for game in top_games:
+        game_info = get_game_info(game[0], bgg)
+        if not game_info.expansion:
+            count_of_printed += 1
+            similar10.append(
+                (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > 9:
+            break
     # Get the most rated
     most10 = list()
     top_games.sort(key=lambda x: x[1], reverse=True)
@@ -266,6 +313,7 @@ def main(users=None, raw_data=None, generate_report=False, prune=None):
     lists_dict["top50"] = top50
     lists_dict["bottom10"] = bottom10
     lists_dict["variable10"] = variable10
+    lists_dict["similar10"] = similar10
     lists_dict["most10"] = most10
     json.dump(lists_dict, fi)
     print("Finished")
@@ -275,23 +323,30 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--users",
-        help="use provided list of users instead of pulling a new one")
+        "-c", "--concat",
+        action="store_true",
+        help="concatenate lists of users and guild members")
     parser.add_argument(
-        "--raw",
+        "-g", "--guild",
+        help="guild-id or one of [pc, hc, uk]")
+    parser.add_argument(
+        "-n", type=int, default=50,
+        help="output the top N games")
+    parser.add_argument(
+        "-p", "--prune",
+        action="store_true",
+        help="prune raw data to a specific list of games")
+    parser.add_argument(
+        "-r", "--raw",
         help="provide a .log file to regenerate the final data")
     parser.add_argument(
-        "--prune",
-        help="Prune raw data to a specific list of games")
-    parser.add_argument("--n", type=int, help="Give the top n games")
-    parser.add_argument(
-        "-r",
-        action="store_true",
-        help="Generate pastable report. Does nothing right now")
+        "-u", "--users",
+        help="use provided list of users instead of pulling a new one")
     args = parser.parse_args()
 
     main(
-        users=args.users,
+        concat=args.concat,
+        guild=args.guild,
+        prune=args.prune,
         raw_data=args.raw,
-        generate_report=args.r,
-        prune=args.prune)
+        users=args.users)

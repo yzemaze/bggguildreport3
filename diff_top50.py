@@ -57,13 +57,14 @@ def print_list(old_file, new_file, style):
                 sd_width = max(len(ths[7]), 5)
                 format_string = "{:3} {:5} {:" + str(name_width) + "}" \
                     " {:" + str(ratings_width) + "} {:6}" + \
-                    " {:" + str(mean_width) + ".3f} {:8}" + \
-                    " {:" + str(sd_width) + ".3f}"
+                    "  {:" + str(mean_width) + ".3f} {:8}" + \
+                    "  {:" + str(sd_width) + ".3f}"
                 format_headers = "{:3} {:5} {:" + str(name_width) + "}" \
                     " {:" + str(ratings_width) + "} {:6}" + \
-                    " {:" + str(mean_width) + "} {:8}" + \
-                    " {:" + str(sd_width) + "}"
-                print(format_headers.format(*ths), file=of)
+                    "  {:" + str(mean_width) + "} {:8}" + \
+                    "  {:" + str(sd_width) + "}"
+                print("[b]Top 50[/b]\n[c]", file=of)
+                print("" + format_headers.format(*ths), file=of)
 
             # table content
             for index, game_info in enumerate(new_top50):
@@ -96,9 +97,9 @@ def print_list(old_file, new_file, style):
                         <td>{}</td> \
                         <td class=\"text-right\">{:4}</td> \
                         <td class=\"text-right\">{}</td> \
-                        <td class=\"text-right\">{:5.3f}</td> \
+                        <td class=\"text-right\">{:6.3f}</td> \
                         <td class=\"text-right\">{}</td> \
-                        <td class=\"text-right\">{:5.3f}</td> \
+                        <td class=\"text-right\">{:6.3f}</td> \
                         </tr>".format(
                         *table_row_data), file=of)
                 elif style == "bbcode":
@@ -121,6 +122,8 @@ def print_list(old_file, new_file, style):
                 print("</tbody></table>", file=of)
             elif style == "bbcode":
                 print("[/table]", file=of)
+            else:
+                print("[/c]", file=of)
 
 if __name__ == "__main__":
     # parse arguments
@@ -139,7 +142,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lang",
         default="en",
-        help="language used for headlines and tableheaders")
+        help="language for headlines and tableheaders - default: en")
     args = parser.parse_args()
 
     lang = gettext.translation("diff_top50", localedir="locales",

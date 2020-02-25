@@ -6,14 +6,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
 "POT-Creation-Date: 2019-05-14 13:59+CEST\n"
-"PO-Revision-Date: 2019-10-22 16:10+CEST\n"
+"PO-Revision-Date: 2020-02-18 21:44+0100\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-
 
 #: printlists.py:10
 msgid "Game"
@@ -35,19 +34,22 @@ msgstr ""
 msgid "Stdev"
 msgstr ""
 
-#: printlists.py:87
+#: printlists.py:89
 msgid "Bottom 10"
 msgstr ""
 
-#: printlists.py:87
+#: printlists.py:89
 msgid "Top 50"
 msgstr ""
 
-#: printlists.py:88
+#: printlists.py:90
 msgid "Most Rated"
 msgstr ""
 
-#: printlists.py:88
-msgid "Most Varied"
+#: printlists.py:90
+msgid "Most Similar"
 msgstr ""
 
+#: printlists.py:90
+msgid "Most Varied"
+msgstr ""
