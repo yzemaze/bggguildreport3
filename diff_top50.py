@@ -79,11 +79,11 @@ def print_list(old_file, new_file, style):
                         old_top50_ratings[old_index]
                     diff_mean = game_info[3] - \
                         old_top50_means[old_index]
-                    diff_string = "({:>+3})".format(diff)
-                    diff_ratings = "({:>+3})".format(diff_ratings)
-                    diff_mean = "({:+.3f})".format(diff_mean)
+                    diff_string = "{:>+3}".format(diff)
+                    diff_ratings = "{:>+3}".format(diff_ratings)
+                    diff_mean = "{:+.3f}".format(diff_mean)
                 else:
-                    diff_string = "(" + _("new") + ")"
+                    diff_string = _("new")
                     diff_mean = ""
                     diff_ratings = ""
 
