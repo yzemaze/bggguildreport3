@@ -34,18 +34,18 @@ TIME = "time_at_generation"
 ### Functions that fetch from BGG ###
 
 
-def get_guild_user_list(guild_id, bgg=False):
+def get_guild_user_list(guild_id, bgg=None):
     """Fetch the member list for a BGG Guild"""
-    if bgg is False:
+    if bgg is None:
         bgg = BGGClient()
     print("Fetching guild user list")
     guild = bgg.guild(guild_id)
     return list(guild.members)
 
 
-def get_user_ratings(username, bgg=False):
+def get_user_ratings(username, bgg=None):
     """Returns a dict: gameid -> rating"""
-    if bgg is False:
+    if bgg is None:
         bgg = BGGClient()
     user_ratings = dict()
     collection = bgg.collection(username)
@@ -56,13 +56,13 @@ def get_user_ratings(username, bgg=False):
     return user_ratings
 
 
-def get_game_info(game_id, bgg=False):
+def get_game_info(game_id, bgg=None):
     """Fetch the BGG info for game having game_id"""
-    if bgg is False:
+    if bgg is None:
         bgg = BGGClient()
     print("Fetching info for game", str(game_id))
-    game = False
-    while game is False:
+    game = None
+    while game is None:
         try:
             game = bgg.game(game_id=game_id)
         except Exception:
@@ -88,11 +88,11 @@ def load_members_from_file(filename):
     return members
 
 
-def get_all_ratings(members, bgg=False):
+def get_all_ratings(members, bgg=None):
     """Get the ratings for all users in the list members.
         Returns: A dict (gameid, game name) -> list of ratings
     """
-    if bgg is False:
+    if bgg is None:
         bgg = BGGClient()
     all_member_ratings = dict()
     print("Retrieving user ratings...")
@@ -133,8 +133,8 @@ def collapse_ratings(member_ratings):
     return guild_ratings
 
 
-def main(concat=False, guild="pc", users=False, raw_data=False, prune=False):
-    if users is False:
+def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
+    if users is None or concat is True:
         if guild == "hc":
             guild_id = HEAVY_CARDBOARD
         elif guild == "pc":
@@ -149,10 +149,10 @@ def main(concat=False, guild="pc", users=False, raw_data=False, prune=False):
     # if users and not raw_data: load users, get user ratings, process ratings
     # if raw data: load users, load user ratings, process ratings
     date_str = datetime.datetime.now().strftime("%Y%m%d")
-    if raw_data is False:
+    if raw_data is None:
         if concat is False:
             # load members from file or query for current list
-            if users is False:
+            if users is None:
                 members = get_guild_user_list(guild_id, bgg=bgg)
                 of = open("members_" + date_str + ".txt", "w")
                 for member in members:
@@ -205,8 +205,7 @@ def main(concat=False, guild="pc", users=False, raw_data=False, prune=False):
             json.dump(rating_data, raw_data_file)
         with open("member_data_" + date_str + ".yml", "w") as raw_data_file:
             yaml.dump(member_ratings, raw_data_file)
-
-    elif raw_data is not False:
+    elif raw_data is not None:
         rating_data = json.load(open(raw_data, "r"))
 
     # Either path we now have rating_data
