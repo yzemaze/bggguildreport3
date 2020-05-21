@@ -179,7 +179,7 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
 
         print("Processing results...")
         print("%d games rated" % len(guild_ratings))
-        top_games = list()
+        all_games = list()
         for game_id, ratings in guild_ratings.items():
             num_ratings = len(ratings)
             avg_rating = round(mean(ratings), 3)
@@ -187,10 +187,10 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
                 sd_ratings = round(stdev(ratings), 3)
             else:
                 sd_ratings = 0
-            top_games.append((game_id, num_ratings, avg_rating, sd_ratings))
+            all_games.append((game_id, num_ratings, avg_rating, sd_ratings))
 
         # Sort the list
-        top_games.sort(key=lambda x: x[2], reverse=True)
+        all_games.sort(key=lambda x: x[2], reverse=True)
 
         # Write out the raw data to this point
         current_time_str = str(datetime.datetime.now())
@@ -200,7 +200,7 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
                                 TIME: current_time_str
                                 }
         rating_data[MEMBERS] = members
-        rating_data[SORTED_GAMES] = top_games
+        rating_data[SORTED_GAMES] = all_games
         with open("guild_data_" + date_str + ".json", "w") as raw_data_file:
             json.dump(rating_data, raw_data_file)
         with open("member_data_" + date_str + ".yml", "w") as raw_data_file:
@@ -209,7 +209,7 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
         rating_data = json.load(open(raw_data, "r"))
 
     # Either path we now have rating_data
-    top_games = rating_data[SORTED_GAMES]
+    all_games = rating_data[SORTED_GAMES]
     member_count = rating_data[SUMMARY][GUILD_MEMBER_COUNT]
 
     # If we want to prune the games
@@ -219,7 +219,7 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
             reader = csv.reader(f)
             for row in reader:
                 gameid = int(row[0])
-                matches = [x for x in top_games if x[0] == gameid]
+                matches = [x for x in all_games if x[0] == gameid]
                 if len(matches) == 1:
                     match = matches[0]
                     matched_game = (
@@ -246,8 +246,25 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
             print(detail_string)
         return
     else:
-        top_games = [x for x in top_games if x[1] >= 0.1 * member_count]
+        top_games = [x for x in all_games if x[1] >= 0.1 * member_count]
+        sleeper_games = [
+            x for x in all_games
+            if x[1] <= 0.1 * member_count
+            and x[1] >= 0.02 * member_count
+            and x[2] >= 7.5]
 
+    # Get sleepers
+    sleeper10 = list()
+    sleeper_games.sort(key=lambda x: x[2], reverse=True)
+    count_of_printed = 0
+    for game in sleeper_games:
+        game_info = get_game_info(game[0], bgg)
+        if not game_info.expansion:
+            count_of_printed += 1
+            sleeper10.append(
+                (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > 49:
+            break
     # Get the top 50
     top50 = list()
     top_games.sort(key=lambda x: x[2], reverse=True)
@@ -314,6 +331,7 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
     lists_dict["variable10"] = variable10
     lists_dict["similar10"] = similar10
     lists_dict["most10"] = most10
+    lists_dict["sleeper10"] = sleeper10
     json.dump(lists_dict, fi)
     print("Finished")
 
