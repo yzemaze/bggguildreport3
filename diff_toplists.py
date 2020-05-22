@@ -13,8 +13,8 @@ def print_list(old_file, new_file, style):
             new_lists = json.load(newf)
             newf.close()
 
-            new_top = new_lists["top"]
-            old_top = old_lists["top"]
+            new_top = new_lists["lists"][0]["games"]
+            old_top = old_lists["lists"][0]["games"]
             old_top_gameids = [x[1] for x in old_top]
             old_top_means = [x[3] for x in old_top]
             old_top_ratings = [x[2] for x in old_top]
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         help="language for headlines and tableheaders - default: en")
     args = parser.parse_args()
 
-    lang = gettext.translation("diff_top", localedir="locales",
+    lang = gettext.translation("diff_toplists", localedir="locales",
                                languages=[args.lang])
     lang.install()
     _ = lang.gettext

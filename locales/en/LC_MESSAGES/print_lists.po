@@ -1,4 +1,4 @@
-# bggguildereport3 DE strings
+# bggguildereport3 EN strings
 # Copyright (C) 2019
 # yzemaze <git@yzemaze.de>, 2019.
 #
@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
 "POT-Creation-Date: 2019-05-14 13:59+CEST\n"
-"PO-Revision-Date: 2020-05-22 15:36+CEST\n"
+"PO-Revision-Date: 2020-05-22 15:36+0100\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -14,47 +14,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
 
-
-#: printlists.py:10
+#: print_lists.py:10
 msgid "Game"
-msgstr "Spiel"
+msgstr ""
 
-#: printlists.py:10
+#: print_lists.py:10
 msgid "Mean"
-msgstr "Mittelwert"
+msgstr ""
 
-#: printlists.py:10
+#: print_lists.py:10
 msgid "No."
-msgstr "Nr."
+msgstr ""
 
-#: printlists.py:10
+#: print_lists.py:10
 msgid "Ratings"
-msgstr "Bewertungen"
+msgstr ""
 
-#: printlists.py:10
+#: print_lists.py:10
 msgid "Stdev"
-msgstr "Stdabw"
+msgstr ""
 
-#: printlists.py:89
+#: print_lists.py:89
 msgid "Bottom"
-msgstr "Bottom"
+msgstr ""
 
-#: printlists.py:89
+#: print_lists.py:89
 msgid "Top"
-msgstr "Top"
+msgstr ""
 
-#: printlists.py:90
+#: print_lists.py:90
 msgid "Most Rated"
-msgstr "Meiste Bewertungen"
+msgstr ""
 
-#: printlists.py:90
+#: print_lists.py:90
 msgid "Most Similar"
-msgstr "Min. Abweichung"
+msgstr ""
 
-#: printlists.py:90
+#: print_lists.py:90
 msgid "Most Varied"
-msgstr "Max. Abweichung"
+msgstr ""
 
-#: printlists.py:90
+#: print_lists.py:90
 msgid "Sleepers"
-msgstr "Sleeper"
+msgstr ""

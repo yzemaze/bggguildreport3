@@ -4,12 +4,12 @@ import gettext
 import json
 
 
-def print_list(category, headline, style):
+def print_list(category, games, headline, count, style):
     """Print list per category in given style to file."""
     hlevel = "h3"
     ths = [_("No."), _("Game"), _("Ratings"), _("Mean"), _("Stdev")]
 
-    json_data = data[category]
+    json_data = games
     if style == "html":
         print("<", hlevel, ">", headline, "</", hlevel, ">", sep="", file=of)
         print("<table id=", category, "><thead><tr>", sep="", file=of)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         help="language used for headlines and tableheaders")
     args = parser.parse_args()
 
-    lang = gettext.translation("printlists", localedir="locales",
+    lang = gettext.translation("print_lists", localedir="locales",
                                languages=[args.lang])
     lang.install()
     _ = lang.gettext
@@ -87,21 +87,15 @@ if __name__ == "__main__":
         with open("output_" + date_str + "." + ext, "w") as of:
             headlines = [
                 _("Top"), _("Bottom"),
-                _("Most Varied"), _("Most Similar"), _("Most Rated"), _("Sleepers")]
+                _("Most Varied"), _("Most Similar"),
+                _("Most Rated"), _("Sleepers")]
             if style == "html":
-                print("<style>\n\
-    .text-right {text-align: right; padding: 0 5px;}\n\
-</style>", file=of)
-            top = data["top"]
-            print_list("top", headlines[0], style)
-            bottom = data["bottom"]
-            print_list("bottom", headlines[1], style)
-            variable = data["variable"]
-            print_list("variable", headlines[2], style)
-            similar = data["similar"]
-            print_list("similar", headlines[3], style)
-            most = data["most"]
-            print_list("most", headlines[4], style)
-            sleeper = data["sleeper"]
-            print_list("sleeper", headlines[5], style)
+                print("<style>\n.text-right {\
+                        text-align: right; padding: 0 5px;}\n\
+                    </style>", file=of)
+            i = 0
+            for d in data["lists"]:
+                print_list(d["category"], d["games"],
+                           headlines[i], d["count"], style)
+                i += 1
             of.close()

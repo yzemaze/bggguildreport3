@@ -415,18 +415,19 @@ def main(b, n, s, guild, concat=False,
 
     # save lists
     lists_dict = dict()
-    lists_dict["top"] = {"count": n, "games": top}
-    lists_dict["bottom"] = {"count": b, "games": bottom}
-    lists_dict["variable"] = {"count": b, "games": variance}
-    lists_dict["similar"] = {"count": b, "games": similar}
-    lists_dict["most"] = {"count": b, "games": most_rated}
-    lists_dict["sleeper"] = {"count": s, "games": sleepers}
-    # lists_dict["top"] = top
-    # lists_dict["bottom"] = bottom
-    # lists_dict["variable"] = variance
-    # lists_dict["similar"] = similar
-    # lists_dict["most"] = most_rated
-    # lists_dict["sleeper"] = sleepers
+    lists_dict["lists"] = []
+    lists_dict["lists"].append(
+        {"category": "top", "count": n, "games": top})
+    lists_dict["lists"].append(
+        {"category": "bottom", "count": b, "games": bottom})
+    lists_dict["lists"].append({
+        "category": "variance", "count": b, "games": variance})
+    lists_dict["lists"].append(
+        {"category": "similar", "count": b, "games": similar})
+    lists_dict["lists"].append({
+        "category": "most_rated", "count": b, "games": most_rated})
+    lists_dict["lists"].append(
+        {"category": "sleepers", "count": s, "games": sleepers})
     with open("lists_" + date_str + ".json", "w") as fi:
         json.dump(lists_dict, fi)
     print("Finished")
