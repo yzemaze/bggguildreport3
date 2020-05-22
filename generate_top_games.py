@@ -58,9 +58,9 @@ def get_user_ratings(username, bgg=None):
 
 def get_game_info(game_id, bgg=None):
     """Fetch the BGG info for game having game_id"""
+    print("Fetching info for game", str(game_id))
     if bgg is None:
         bgg = BGGClient()
-    print("Fetching info for game", str(game_id))
     game = None
     while game is None:
         try:
@@ -133,7 +133,8 @@ def collapse_ratings(member_ratings):
     return guild_ratings
 
 
-def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
+def main(b, n, s, guild, concat=False,
+         raw_data=None, prune=False, users=None):
     if users is None or concat is True:
         if guild == "hc":
             guild_id = HEAVY_CARDBOARD
@@ -249,96 +250,188 @@ def main(concat=False, guild="pc", users=None, raw_data=None, prune=False):
         top_games = [x for x in all_games if x[1] >= 0.1 * member_count]
         sleeper_games = [
             x for x in all_games
-            if x[1] <= 0.1 * member_count
+            if x[1] < 0.1 * member_count
             and x[1] >= 0.02 * member_count
             and x[2] >= 7.5]
 
-    # Get sleepers
-    sleeper10 = list()
-    sleeper_games.sort(key=lambda x: x[2], reverse=True)
-    count_of_printed = 0
-    for game in sleeper_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            sleeper10.append(
-                (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 49:
-            break
-    # Get the top 50
-    top50 = list()
+    # get game infos from file if possible, else create dict
+    filename = "game_infos.json"
+    try:
+        with open(filename, "r") as fi:
+            game_infos = json.load(fi)
+    except IOError:
+        print("Could not open ", filename, ", creating new dict()", sep="")
+        game_infos = dict()
+
+    # Get the top x
+    print("TOP")
+    top = list()
     top_games.sort(key=lambda x: x[2], reverse=True)
     count_of_printed = 0
     for game in top_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            top50.append((game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 49:
+        gameid = str(game[0])
+        # game_name available from file else load from BGG
+        try:
+            game_name = game_infos[gameid]["name"]
+            print("Read info for game", gameid, "from", filename)
+            if not game_infos[gameid]["expansion"]:
+                count_of_printed += 1
+                top.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                top.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > n - 1:
             break
-    # Get the bottom 10
-    bottom10 = list()
+    # Get the bottom x
+    print("BOTTOM")
+    bottom = list()
     top_games.sort(key=lambda x: x[2])
     count_of_printed = 0
     for game in top_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            bottom10.append(
-                (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 9:
+        gameid = str(game[0])
+        try:
+            game_name = game_infos[gameid]["name"]
+            if not game_infos[gameid]["expansion"]:
+                print("Read info for game", gameid, "from", filename)
+                count_of_printed += 1
+                bottom.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                bottom.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > b - 1:
             break
     # Get the most variable
-    variable10 = list()
+    print("VARIANCE")
+    variance = list()
     top_games.sort(key=lambda x: x[3], reverse=True)
     count_of_printed = 0
     for game in top_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            variable10.append(
-                (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 9:
+        gameid = str(game[0])
+        try:
+            game_name = game_infos[gameid]["name"]
+            if not game_infos[gameid]["expansion"]:
+                print("Read info for game", gameid, "from", filename)
+                count_of_printed += 1
+                variance.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                variance.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > b - 1:
             break
     # Get the least variable
-    similar10 = list()
+    print("SIMILAR")
+    similar = list()
     top_games.sort(key=lambda x: x[3], reverse=False)
     count_of_printed = 0
     for game in top_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            similar10.append(
-                (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 9:
+        gameid = str(game[0])
+        try:
+            game_name = game_infos[gameid]["name"]
+            if not game_infos[gameid]["expansion"]:
+                print("Read info for game", gameid, "from", filename)
+                count_of_printed += 1
+                similar.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                similar.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > b - 1:
             break
     # Get the most rated
-    most10 = list()
+    print("MOST RATED")
+    most_rated = list()
     top_games.sort(key=lambda x: x[1], reverse=True)
     count_of_printed = 0
     for game in top_games:
-        game_info = get_game_info(game[0], bgg)
-        if not game_info.expansion:
-            count_of_printed += 1
-            most10.append((game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > 9:
+        gameid = str(game[0])
+        try:
+            game_name = game_infos[gameid]["name"]
+            if not game_infos[gameid]["expansion"]:
+                print("Read info for game", gameid, "from", filename)
+                count_of_printed += 1
+                most_rated.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                most_rated.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > b - 1:
+            break
+    # Get sleepers
+    print("SLEEPERS")
+    sleepers = list()
+    sleeper_games.sort(key=lambda x: x[2], reverse=True)
+    count_of_printed = 0
+    for game in sleeper_games:
+        gameid = str(game[0])
+        try:
+            game_name = game_infos[gameid]["name"]
+            if not game_infos[gameid]["expansion"]:
+                print("Read info for game", gameid, "from", filename)
+                count_of_printed += 1
+                sleepers.append(
+                    (game_name, game[0], game[1], game[2], game[3]))
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            game_infos[gameid] = {"name": game_info.name,
+                                  "expansion": game_info.expansion}
+            if not game_info.expansion:
+                count_of_printed += 1
+                sleepers.append(
+                    (game_info.name, game[0], game[1], game[2], game[3]))
+        if count_of_printed > s - 1:
             break
 
-    fi = open("lists_" + date_str + ".json", "w")
+    # save game_infos
+    with open(filename, "w") as fi:
+        json.dump(game_infos, fi)
+
+    # save lists
     lists_dict = dict()
-    lists_dict["top50"] = top50
-    lists_dict["bottom10"] = bottom10
-    lists_dict["variable10"] = variable10
-    lists_dict["similar10"] = similar10
-    lists_dict["most10"] = most10
-    lists_dict["sleeper10"] = sleeper10
-    json.dump(lists_dict, fi)
+    lists_dict["top50"] = top
+    lists_dict["bottom10"] = bottom
+    lists_dict["variable10"] = variance
+    lists_dict["similar10"] = similar
+    lists_dict["most10"] = most_rated
+    lists_dict["sleeper10"] = sleepers
+    with open("lists_" + date_str + ".json", "w") as fi:
+        json.dump(lists_dict, fi)
     print("Finished")
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-b", type=int, default=10,
+        help="output the bottom, most/least variable & most rated B games")
     parser.add_argument(
         "-c", "--concat",
         action="store_true",
@@ -348,22 +441,28 @@ if __name__ == "__main__":
         help="guild-id or one of [pc, hc, uk]")
     parser.add_argument(
         "-n", type=int, default=50,
-        help="output the top N games")
+        help="output the top N games, default=50")
     parser.add_argument(
         "-p", "--prune",
         action="store_true",
         help="prune raw data to a specific list of games")
     parser.add_argument(
         "-r", "--raw",
-        help="provide a .log file to regenerate the final data")
+        help="RAW = guild_data_YYYYMMDD.json to regenerate final data")
+    parser.add_argument(
+        "-s", type=int, default=50,
+        help="output the top S sleepers, default=50")
     parser.add_argument(
         "-u", "--users",
         help="use provided list of users instead of pulling a new one")
     args = parser.parse_args()
 
     main(
+        b=args.b,
         concat=args.concat,
         guild=args.guild,
+        n=args.n,
         prune=args.prune,
         raw_data=args.raw,
+        s=args.s,
         users=args.users)
