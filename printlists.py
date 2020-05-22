@@ -86,22 +86,22 @@ if __name__ == "__main__":
 
         with open("output_" + date_str + "." + ext, "w") as of:
             headlines = [
-                _("Top 50"), _("Bottom 10"),
-                _("Most Varied"), _("Most Similar"), _("Most Rated"), _("Sleeper")]
+                _("Top"), _("Bottom"),
+                _("Most Varied"), _("Most Similar"), _("Most Rated"), _("Sleepers")]
             if style == "html":
                 print("<style>\n\
     .text-right {text-align: right; padding: 0 5px;}\n\
 </style>", file=of)
-            top50 = data["top50"]
-            print_list("top50", headlines[0], style)
-            bottom10 = data["bottom10"]
-            print_list("bottom10", headlines[1], style)
-            variable10 = data["variable10"]
-            print_list("variable10", headlines[2], style)
-            similar10 = data["similar10"]
-            print_list("similar10", headlines[3], style)
-            most10 = data["most10"]
-            print_list("most10", headlines[4], style)
-            sleeper10 = data["sleeper10"]
-            print_list("sleeper10", headlines[5], style)
+            top = data["top"]
+            print_list("top", headlines[0], style)
+            bottom = data["bottom"]
+            print_list("bottom", headlines[1], style)
+            variable = data["variable"]
+            print_list("variable", headlines[2], style)
+            similar = data["similar"]
+            print_list("similar", headlines[3], style)
+            most = data["most"]
+            print_list("most", headlines[4], style)
+            sleeper = data["sleeper"]
+            print_list("sleeper", headlines[5], style)
             of.close()

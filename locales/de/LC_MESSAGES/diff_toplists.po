@@ -1,4 +1,4 @@
-# bggguildereport3 EN strings
+# bggguildereport3 DE strings
 # Copyright (C) 2019
 # yzemaze <git@yzemaze.de>, 2019.
 #
@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
 "POT-Creation-Date: 2019-10-21 22:29+CEST\n"
-"PO-Revision-Date: 2019-10-21 22:34+CEST\n"
+"PO-Revision-Date: 2019-10-22 15:35+CEST\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -15,36 +15,36 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: diff_top50.py:22
-msgid "Top50 Diff"
-msgstr ""
+#: diff_toplists.py:22
+msgid "Top Diff"
+msgstr "Top mit +/-"
 
-#: diff_top50.py:24
+#: diff_toplists.py:24
 msgid "No."
-msgstr ""
+msgstr "Nr."
 
-#: diff_top50.py:25 diff_top50.py:29
+#: diff_toplists.py:25 diff_toplists.py:29
 msgid "+/-"
-msgstr ""
+msgstr "+/-"
 
-#: diff_top50.py:26
+#: diff_toplists.py:26
 msgid "Game"
-msgstr ""
+msgstr "Spiel"
 
-#: diff_top50.py:27
+#: diff_toplists.py:27
 msgid "Ratings"
-msgstr ""
-
-#: diff_top50.py:28
-msgid "Mean"
-msgstr ""
-
-#: diff_top50.py:30
-msgid "Stdev"
-msgstr ""
+msgstr "Bewertungen"
 
 msgid "+"
-msgstr ""
+msgstr "+"
+
+#: diff_toplists.py:28
+msgid "Mean"
+msgstr "Mittelwert"
+
+#: diff_toplists.py:30
+msgid "Stdev"
+msgstr "Stdabw"
 
 msgid "new"
-msgstr ""
+msgstr "neu"

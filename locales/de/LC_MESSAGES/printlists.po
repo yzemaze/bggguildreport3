@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 732b960\n"
 "POT-Creation-Date: 2019-05-14 13:59+CEST\n"
-"PO-Revision-Date: 2020-05-21 18:26+0100\n"
+"PO-Revision-Date: 2020-05-22 15:36+CEST\n"
 "Last-Translator: yzemaze <git@yzemaze.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -36,12 +36,12 @@ msgid "Stdev"
 msgstr "Stdabw"
 
 #: printlists.py:89
-msgid "Bottom 10"
-msgstr "Bottom 10"
+msgid "Bottom"
+msgstr "Bottom"
 
 #: printlists.py:89
-msgid "Top 50"
-msgstr "Top 50"
+msgid "Top"
+msgstr "Top"
 
 #: printlists.py:90
 msgid "Most Rated"
@@ -56,5 +56,5 @@ msgid "Most Varied"
 msgstr "Max. Abweichung"
 
 #: printlists.py:90
-msgid "Sleeper"
+msgid "Sleepers"
 msgstr "Sleeper"

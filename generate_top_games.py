@@ -415,12 +415,18 @@ def main(b, n, s, guild, concat=False,
 
     # save lists
     lists_dict = dict()
-    lists_dict["top50"] = top
-    lists_dict["bottom10"] = bottom
-    lists_dict["variable10"] = variance
-    lists_dict["similar10"] = similar
-    lists_dict["most10"] = most_rated
-    lists_dict["sleeper10"] = sleepers
+    lists_dict["top"] = {"count": n, "games": top}
+    lists_dict["bottom"] = {"count": b, "games": bottom}
+    lists_dict["variable"] = {"count": b, "games": variance}
+    lists_dict["similar"] = {"count": b, "games": similar}
+    lists_dict["most"] = {"count": b, "games": most_rated}
+    lists_dict["sleeper"] = {"count": s, "games": sleepers}
+    # lists_dict["top"] = top
+    # lists_dict["bottom"] = bottom
+    # lists_dict["variable"] = variance
+    # lists_dict["similar"] = similar
+    # lists_dict["most"] = most_rated
+    # lists_dict["sleeper"] = sleepers
     with open("lists_" + date_str + ".json", "w") as fi:
         json.dump(lists_dict, fi)
     print("Finished")
