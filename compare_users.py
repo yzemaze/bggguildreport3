@@ -1,4 +1,11 @@
 import yaml
+def calculate_similarity(user_data, other_ratings):
+    user_game_ids = set(user_data.keys())
+    common_games = user_game_ids & set(other_ratings.keys())
+    score = sum((user_data[gid] - other_ratings[gid])**2 for gid in common_games)
+    return score, len(common_games)
+
+
 def main(user, member_data_file):
     with open(member_data_file, "r") as data_file:
         member_data = yaml.safe_load(data_file)
@@ -12,11 +19,8 @@ def main(user, member_data_file):
     user_collection_size = len(user_data)
 
     member_scores = list()
-    user_game_ids = set(user_data.keys())
     for member_user, ratings in member_data.items():
-        common_games = user_game_ids & set(ratings.keys())
-        score = sum((user_data[gid] - ratings[gid])**2 for gid in common_games)
-        games_in_common = len(common_games)
+        score, games_in_common = calculate_similarity(user_data, ratings)
         member_scores.append(
             {"user": member_user, "score": score, "common": games_in_common})
 
