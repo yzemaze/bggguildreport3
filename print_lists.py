@@ -5,7 +5,7 @@ import json
 import logging
 
 
-def print_list(category, games, headline, count, style):
+def print_list(category, games, headline, count, style, of):
     """print list per category in given style to file."""
     hlevel = "h3"
     ths = [_("No."), _("Game"), _("Ratings"), _("Mean"), _("Stdev")]
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             i = 0
             for d in data["lists"]:
                 print_list(d["category"], d["games"],
-                           headlines[i], d["count"], style)
+                           headlines[i], d["count"], style, of)
                 logger.info(f"formatted printing of {headlines[i]} done")
                 i += 1
 
