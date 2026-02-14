@@ -13,6 +13,7 @@ import json
 import logging
 import math
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from queue import Queue
@@ -76,7 +77,8 @@ def get_user_ratings(username, bgg=None):
 
 def get_game_info(game_id, bgg=None):
     """retrieve the BGG info for game having game_id"""
-    return get_game_info_batch([game_id], bgg)[0]
+    res = get_game_info_batch([game_id], bgg)
+    return res[0] if res else None
 
 
 def get_game_info_batch(game_ids, bgg=None):
@@ -87,15 +89,23 @@ def get_game_info_batch(game_ids, bgg=None):
     bgg = _get_bgg_client(bgg)
     games = []
     chunk_size = 20
+    MAX_RETRIES = 5
+    
     for i in range(0, len(game_ids), chunk_size):
         chunk = game_ids[i:i + chunk_size]
-        while True:
+        retries = 0
+        while retries < MAX_RETRIES:
             try:
                 games.extend(bgg.game_list(chunk))
                 break
             except Exception as e:
-                logger.info(f"Trying to retrieve chunk again due to: {e}")
-                continue
+                retries += 1
+                wait_time = 2 ** retries
+                logger.info(f"Error retrieving chunk (attempt {retries}/{MAX_RETRIES}): {e}. Waiting {wait_time}s...")
+                time.sleep(wait_time)
+        else:
+            logger.error(f"Failed to retrieve games after {MAX_RETRIES} attempts: {chunk}")
+            
     return games
 
 
@@ -139,13 +149,9 @@ def get_all_ratings(members, bgg=None):
                 failed.append(member)
             else:
                 logger.info(f"error retrieving {member}: {e}")
-                # We could implement retries here or just mark as failed
                 failed.append(member)
             return member, None
 
-    # Using threads to fetch concurrently. 
-    # Note: BGGClient handles its own rate limiting (RPM).
-    # Too many threads might still hit issues, but a small pool is fine.
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = list(executor.map(fetch_user, members))
     
@@ -189,8 +195,11 @@ def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
         info = game_infos.get(gameid)
         if not info:
             game_info = get_game_info(gameid, bgg)
-            info = {"name": game_info.name, "expansion": game_info.expansion}
-            game_infos[gameid] = info
+            if game_info:
+                info = {"name": game_info.name, "expansion": game_info.expansion}
+                game_infos[gameid] = info
+            else:
+                continue
 
         if not info["expansion"]:
             count += 1
