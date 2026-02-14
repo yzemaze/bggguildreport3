@@ -3,6 +3,10 @@ def main(user, member_data_file):
     with open(member_data_file, "r") as data_file:
         member_data = yaml.safe_load(data_file)
 
+    if user not in member_data:
+        print(f"Error: User '{user}' not found in member data.")
+        return
+
     user_data = member_data[user]
     del member_data[user]
     user_collection_size = len(user_data)
@@ -24,7 +28,7 @@ def main(user, member_data_file):
     with open(filename, "w") as fo:
         yaml.dump(member_scores, fo)
 
-    for i in range(5):
+    for i in range(min(5, len(member_scores))):
         member = member_scores[i]
         print(member["user"], member["score"], member["common"])
 
