@@ -352,15 +352,32 @@ if __name__ == "__main__":
     logger = logging.getLogger()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", type=int, default=10, help="bottom size")
-    parser.add_argument("-c", "--concat", action="store_true", help="concat members")
-    parser.add_argument("-g", "--guild", help="guild id")
-    parser.add_argument("-n", type=int, default=50, help="top size")
-    parser.add_argument("-p", "--prune", help="prune list")
-    parser.add_argument("-r", "--raw", help="raw data json")
-    parser.add_argument("-s", type=int, default=50, help="sleeper size")
-    parser.add_argument("-u", "--users", help="users file")
+    parser.add_argument(
+      "-b", type=int, default=10,
+      help="output the bottom, most/least variable & most rated B games")
+    parser.add_argument(
+      "-c", "--concat",
+      action="store_true",
+      help="concatenate lists of users and guild members")
+    parser.add_argument(
+      "-g", "--guild",
+      help="guild-id or one of [hc, pc, uk, test]")
+    parser.add_argument(
+      "-n", type=int, default=50,
+      help="output the top N games, default=50")
+    parser.add_argument(
+      "-p", "--prune",
+      action="store_true",
+      help="prune raw data to a specific list of games")
+    parser.add_argument(
+      "-r", "--raw",
+      help="RAW = guild_data_YYYYMMDD.json to regenerate final data")
+    parser.add_argument(
+      "-s", type=int, default=50,
+      help="output the top S sleepers, default=50")
+    parser.add_argument(
+      "-u", "--users",
+      help="use provided file of users instead of pulling a new one")
     args = parser.parse_args()
-
     main(b=args.b, concat=args.concat, guild=args.guild, n=args.n,
          prune=args.prune, raw_data=args.raw, s=args.s, users=args.users)
