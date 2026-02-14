@@ -8,14 +8,11 @@ def main(user, member_data_file):
     user_collection_size = len(user_data)
 
     member_scores = list()
+    user_game_ids = set(user_data.keys())
     for member_user, ratings in member_data.items():
-        score = 0
-        games_in_common = 0
-        for game, rating in user_data.items():
-            if game in ratings:
-                diff = (rating - ratings[game])**2
-                score += diff
-                games_in_common += 1
+        common_games = user_game_ids & set(ratings.keys())
+        score = sum((user_data[gid] - ratings[gid])**2 for gid in common_games)
+        games_in_common = len(common_games)
         member_scores.append(
             {"user": member_user, "score": score, "common": games_in_common})
 
