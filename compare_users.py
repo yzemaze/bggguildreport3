@@ -1,10 +1,5 @@
 import yaml
-from boardgamegeek import BGGClient
-
-
 def main(user, member_data_file):
-    bgg = BGGClient()
-
     with open(member_data_file, "r") as data_file:
         member_data = yaml.load(data_file)
 
