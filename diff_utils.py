@@ -21,7 +21,7 @@ TEMPLATES = {
         "th": lambda t: f"<th>{t}</th>",
         "header_end": lambda: "</tr>\n</thead>\n<tbody>",
         "row_start": lambda: "<tr>",
-        "td": lambda v, align="left": f"<td class=\"text-right\">{v}</td>" if align == "right" else f"<td>{v}</td>",
+        "td": lambda v, align="left", width=0: f"<td class=\"text-right\">{v}</td>" if align == "right" else f"<td>{v}</td>",
         "row_end": lambda: "</tr>",
         "footer": lambda: "</tbody>\n</table>"
     },
@@ -30,7 +30,7 @@ TEMPLATES = {
         "th": lambda t: f"[th]{t}[/th]",
         "header_end": lambda: "[/tr]",
         "row_start": lambda: "[tr]",
-        "td": lambda v, align="left": f"[td]{v}[/td]",
+        "td": lambda v, align="left", width=0: f"[td]{v}[/td]",
         "row_end": lambda: "[/tr]",
         "footer": lambda: "[/table]"
     },
@@ -136,16 +136,16 @@ def print_list(diffs: List[Dict[str, Any]], headline: str, style: str, of: TextI
 
     header = tpl["header_start"](headline, labels, col_specs)
     if header:
-        print(header, end="" if style == "text" else "\n", file=of)
+        print(header, end="" if style in ("text", "bgg") else "\n", file=of)
     
-    if style != "text":
+    if style not in ("text", "bgg"):
         for th in labels:
             print(tpl["th"](th), end="", file=of)
         
     h_end = tpl["header_end"]()
     if h_end:
         print(h_end, file=of)
-    elif style == "text":
+    elif style in ("text", "bgg"):
         print("", file=of) # Newline after text header labels
 
     for d in diffs:
@@ -164,12 +164,12 @@ def print_list(diffs: List[Dict[str, Any]], headline: str, style: str, of: TextI
         for i, (val, align, width) in enumerate(row_values):
             # Align mapping for templates
             a = "right" if align == "right" else "left"
-            if style == "text":
+            if style in ("text", "bgg"):
                 row_str_parts.append(tpl["td"](val, col_specs[i][1], col_specs[i][0]))
             else:
-                print(tpl["td"](val, a), file=of)
+                print(tpl["td"](val, a, width), file=of)
         
-        if style == "text":
+        if style in ("text", "bgg"):
             print(" ".join(row_str_parts), file=of)
 
         r_end = tpl["row_end"]()
