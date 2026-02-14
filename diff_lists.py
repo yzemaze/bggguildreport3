@@ -3,6 +3,7 @@ import datetime
 import gettext
 import json
 import logging
+from pathlib import Path
 
 
 def print_list(old_list, new_list, headline, style, of):
@@ -117,10 +118,19 @@ if __name__ == "__main__":
         help="language for headlines and tableheaders - default: en")
     args = parser.parse_args()
 
-    lang = gettext.translation("diff_lists", localedir="locales",
-                               languages=[args.lang])
-    lang.install()
-    _ = lang.gettext
+    locales_dir = Path("locales")
+    if locales_dir.exists():
+        try:
+            lang = gettext.translation("diff_lists", localedir=str(locales_dir),
+                                       languages=[args.lang])
+            lang.install()
+            _ = lang.gettext
+        except FileNotFoundError:
+            logger.warning(f"translation for {args.lang} not found, using default")
+            _ = lambda s: s
+    else:
+        logger.warning("locales directory not found, using default translations")
+        _ = lambda s: s
 
     if args.style in ("bgg", "bbcode"):
         style = args.style
@@ -130,16 +140,20 @@ if __name__ == "__main__":
         ext = "html"
 
     date_str = datetime.datetime.now().strftime("%Y%m%d")
-    diff_file = f"diff_{date_str}.{ext}"
+    diff_file = Path(f"diff_{date_str}.{ext}")
 
-    with open(args.old_file, "r", encoding="utf-8") as oldf:
-        old_lists_raw = json.load(oldf)
+    try:
+        with open(args.old_file, "r", encoding="utf-8") as oldf:
+            old_lists_raw = json.load(oldf)
 
-    with open(args.new_file, "r", encoding="utf-8") as newf:
-        new_lists_raw = json.load(newf)
+        with open(args.new_file, "r", encoding="utf-8") as newf:
+            new_lists_raw = json.load(newf)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"error loading input files: {e}")
+        exit(1)
 
     # Convert old lists to a dictionary for category-based matching
-    old_lists_map = {lst["category"]: lst["games"] for lst in old_lists_raw["lists"]}
+    old_lists_map = {lst["category"]: lst["games"] for lst in old_lists_raw.get("lists", [])}
 
     # Mapping of category IDs to localized headlines
     category_headlines = {
@@ -152,8 +166,11 @@ if __name__ == "__main__":
     }
 
     with open(diff_file, "w", encoding="utf-8") as of:
-        for new_list_data in new_lists_raw["lists"]:
-            category = new_list_data["category"]
+        for new_list_data in new_lists_raw.get("lists", []):
+            category = new_list_data.get("category")
+            if not category:
+                continue
+                
             headline = category_headlines.get(category, category.capitalize())
             
             if category in old_lists_map:
