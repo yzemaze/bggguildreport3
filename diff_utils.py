@@ -3,6 +3,8 @@ Utility functions for calculating and rendering differences between game lists.
 """
 
 import logging
+import gettext
+from pathlib import Path
 from typing import List, Dict, Any, Tuple, TextIO, Callable, Optional
 
 # Initialize logger
@@ -45,6 +47,30 @@ TEMPLATES = {
         "footer": lambda: "[/c]"
     }
 }
+
+
+def setup_translation(domain: str, lang_code: str) -> Callable[[str], str]:
+    """
+    Setup gettext translation and return the gettext function.
+
+    Args:
+        domain: The translation domain (e.g., 'diff_lists').
+        lang_code: The language code (e.g., 'en', 'de').
+
+    Returns:
+        The gettext function.
+    """
+    locales_dir = Path("locales")
+    if locales_dir.exists():
+        try:
+            lang = gettext.translation(domain, localedir=str(locales_dir), languages=[lang_code])
+            lang.install()
+            return lang.gettext
+        except Exception:
+            logger.warning(f"translation for {lang_code} not found in {domain}, using default")
+    else:
+        logger.warning("locales directory not found, using default translations")
+    return lambda s: s
 
 
 def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> List[Dict[str, Any]]:

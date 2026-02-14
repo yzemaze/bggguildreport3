@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import gettext
 import json
 import logging
 from pathlib import Path
@@ -22,18 +21,7 @@ def main():
     parser.add_argument("--lang", default="en", help="language for headlines and tableheaders - default: en")
     args = parser.parse_args()
 
-    locales_dir = Path("locales")
-    if locales_dir.exists():
-        try:
-            lang = gettext.translation("diff_toplists", localedir=str(locales_dir), languages=[args.lang])
-            lang.install()
-            _ = lang.gettext
-        except Exception:
-            logger.warning(f"translation for {args.lang} not found, using default")
-            _ = lambda s: s
-    else:
-        logger.warning("locales directory not found, using default translations")
-        _ = lambda s: s
+    _ = diff_utils.setup_translation("diff_toplists", args.lang)
 
     if args.style in ("bgg", "bbcode"):
         style, ext = args.style, "txt"
