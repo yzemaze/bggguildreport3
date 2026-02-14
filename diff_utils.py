@@ -4,6 +4,32 @@ from typing import List, Dict, Any, Tuple, TextIO, Callable
 # Initialize logger
 logger = logging.getLogger(__name__)
 
+# Style templates
+TEMPLATES = {
+    "html": {
+        "header_start": lambda h: (
+            f"<style>\n.text-right {{text-align: right; padding: 0 5px;}}\n</style>\n"
+            f"<h3>{h}</h3>\n"
+            f"<table id={h.replace(' ', '_')}>\n<thead>\n<tr>"
+        ),
+        "th": lambda t: f"<th>{t}</th>",
+        "header_end": "</tr>\n</thead>\n<tbody>",
+        "row_start": "<tr>",
+        "td": lambda v, align="left": f"<td class=\"text-right\">{v}</td>" if align == "right" else f"<td>{v}</td>",
+        "row_end": "</tr>",
+        "footer": "</tbody>\n</table>"
+    },
+    "bbcode": {
+        "header_start": lambda h: f"[h3]{h}[/h3]\n[table]\n[tr]",
+        "th": lambda t: f"[th]{t}[/th]",
+        "header_end": "[/tr]",
+        "row_start": "[tr]",
+        "td": lambda v, align="left": f"[td]{v}[/td]",
+        "row_end": "[/tr]",
+        "footer": "[/table]"
+    }
+}
+
 
 def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> List[Dict[str, Any]]:
     """Calculate differences between old and new lists."""
@@ -34,36 +60,8 @@ def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> Lis
 
 def print_list(diffs: List[Dict[str, Any]], headline: str, style: str, of: TextIO, labels: List[str]) -> None:
     """Print the pre-calculated diffs in the given style."""
-    hlevel = "h3"
-
-    # Templates for different styles
-    templates = {
-        "html": {
-            "header_start": lambda h: (
-                f"<style>\n.text-right {{text-align: right; padding: 0 5px;}}\n</style>\n"
-                f"<{hlevel}>{h}</{hlevel}>\n"
-                f"<table id={h.replace(' ', '_')}>\n<thead>\n<tr>"
-            ),
-            "th": lambda t: f"<th>{t}</th>",
-            "header_end": "</tr>\n</thead>\n<tbody>",
-            "row_start": "<tr>",
-            "td": lambda v, align="left": f"<td class=\"text-right\">{v}</td>" if align == "right" else f"<td>{v}</td>",
-            "row_end": "</tr>",
-            "footer": "</tbody>\n</table>"
-        },
-        "bbcode": {
-            "header_start": lambda h: f"[{hlevel}]{h}[/{hlevel}]\n[table]\n[tr]",
-            "th": lambda t: f"[th]{t}[/th]",
-            "header_end": "[/tr]",
-            "row_start": "[tr]",
-            "td": lambda v, align="left": f"[td]{v}[/td]",
-            "row_end": "[/tr]",
-            "footer": "[/table]"
-        }
-    }
-
-    if style in templates:
-        tpl = templates[style]
+    if style in TEMPLATES:
+        tpl = TEMPLATES[style]
         print(tpl["header_start"](headline), file=of)
         for th in labels:
             print(tpl["th"](th), end="", file=of)
