@@ -7,9 +7,8 @@ import logging
 
 def print_list(old_list, new_list, headline, style, of):
     """ print list per category in given style with +/- to file."""
-    old_gameids = [x[1] for x in old_list]
-    old_ratings = [x[2] for x in old_list]
-    old_means = [x[3] for x in old_list]
+    # Create lookup dictionary for old list data: gameid -> (index, ratings, mean)
+    old_lookup = {game[1]: (idx, game[2], game[3]) for idx, game in enumerate(old_list)}
 
     hlevel = "h3"
     ths = [
@@ -50,19 +49,19 @@ def print_list(old_list, new_list, headline, style, of):
 
     # table content
     for index, game_info in enumerate(new_list):
-        try:
-            old_index = old_gameids.index(game_info[1])
-        except ValueError:
-            old_index = -1
+        game_id = game_info[1]
+        old_data = old_lookup.get(game_id)
 
-        if old_index > -1:
+        if old_data:
+            old_index, old_rating, old_mean = old_data
             diff_index = f"{old_index - index:>+3}"
-            diff_ratings = f"{game_info[2] - old_ratings[old_index]:>+3}"
-            diff_mean = f"{game_info[3] - old_means[old_index]:+.3f}"
+            diff_ratings = f"{game_info[2] - old_rating:>+3}"
+            diff_mean = f"{game_info[3] - old_mean:+.3f}"
         else:
             diff_index = _("new")
             diff_ratings = ""
             diff_mean = ""
+            
         if style == "html":
             print(f"<tr>\n"
                   f"<td class=\"text-right\">{index + 1}</td>\n"
