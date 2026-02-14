@@ -169,29 +169,25 @@ def collapse_ratings(member_ratings):
     return guild_ratings
 
 
-def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
-    games.sort(key=sort_key, reverse=reverse)
-    
-    # Pre-fetch missing game info in batches
-    missing_ids = []
-    for game in games:
-        gameid = str(game[0])
-        if gameid not in game_infos:
-            missing_ids.append(int(gameid))
-            if len(missing_ids) >= limit * 2: 
-                break
-    
+def prefetch_game_info(games_to_fetch, game_infos, bgg):
+    """identify missing game IDs and fetch them in one batch"""
+    missing_ids = [int(gid) for gid in games_to_fetch if str(gid) not in game_infos]
     if missing_ids:
+        logger.info(f"pre-fetching {len(missing_ids)} missing games info")
         fetched_games = get_game_info_batch(missing_ids, bgg)
         for g in fetched_games:
             game_infos[str(g.id)] = {"name": g.name, "expansion": g.expansion}
 
+
+def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
+    games.sort(key=sort_key, reverse=reverse)
     result = []
     count = 0
     for game in games:
         gameid = str(game[0])
         info = game_infos.get(gameid)
         if not info:
+            # Should have been pre-fetched, but fallback just in case
             game_info = get_game_info(gameid, bgg)
             if game_info:
                 info = {"name": game_info.name, "expansion": game_info.expansion}
@@ -314,6 +310,15 @@ def main(b, n, s, guild, concat=False,
             game_infos = json.load(fi)
     except IOError:
         game_infos = {}
+
+    # Identify all candidate games to pre-fetch their info
+    candidates = set()
+    for g in top_games:
+        candidates.add(g[0])
+    for g in sleeper_games:
+        candidates.add(g[0])
+    
+    prefetch_game_info(candidates, game_infos, bgg)
 
     # Build lists
     logger.info("building game lists")
