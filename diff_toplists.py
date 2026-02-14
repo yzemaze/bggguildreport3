@@ -55,14 +55,25 @@ def main():
     old_lists = load_json(args.old)
     new_lists = load_json(args.new)
 
-    if old_lists is None or new_lists is None:
+    if new_lists is None:
+        logger.error("Cannot proceed without new data list.")
         exit(1)
+
+    # Graceful fallback for missing old data
+    if old_lists is None:
+        logger.warning("Old lists data missing, generating report without differences.")
+        old_top = []
+    else:
+        try:
+            old_top = old_lists[LISTS_KEY][0][GAMES_KEY]
+        except (IndexError, KeyError):
+            logger.warning("Could not find top games in old data, generating without diffs.")
+            old_top = []
 
     try:
         new_top = new_lists[LISTS_KEY][0][GAMES_KEY]
-        old_top = old_lists[LISTS_KEY][0][GAMES_KEY]
     except (IndexError, KeyError) as e:
-        logger.error(f"Error accessing game lists in data: {e}")
+        logger.error(f"Error accessing new top games list: {e}")
         exit(1)
     
     headline = _("Top Diff")
