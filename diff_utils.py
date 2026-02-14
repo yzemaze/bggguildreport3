@@ -37,12 +37,12 @@ TEMPLATES = {
     "text": {
         "header_start": lambda h, labels, specs: (
             f"[b]{h}[/b]\n[c]\n" +
-            " ".join(f"{str(val):{width}{align}}" for val, (width, align) in zip(labels, specs))
+            " ".join(f"{str(val):{align}{width}}" for val, (width, align) in zip(labels, specs))
         ),
         "th": lambda t: "",  # Labels handled in header_start for text
         "header_end": lambda: "",
         "row_start": lambda: "",
-        "td": lambda v, align, width: f"{str(v):{width}{align}}",
+        "td": lambda v, align, width: f"{str(v):{align}{width}}",
         "row_end": lambda: "",
         "footer": lambda: "[/c]"
     }
