@@ -12,11 +12,23 @@ import datetime
 import json
 import logging
 import math
+import os
+from dotenv import load_dotenv
 from queue import Queue
 from statistics import mean, stdev
 import yaml
 
 from boardgamegeek import BGGClient
+
+# load XML API token from .env
+load_dotenv()
+API_TOKEN = os.getenv("BGG_API_TOKEN")
+if not API_TOKEN:
+    raise ValueError("No BGG_API_TOKEN found.")
+print("Token loaded successfully.")
+
+# requests per minute
+RPM = 6
 
 # guild ids
 HEAVY_CARDBOARD = 2044
@@ -35,10 +47,15 @@ TIME = "time_at_generation"
 ### functions that retrieve from BGG ###
 
 
+def _get_bgg_client(bgg=None):
+    if bgg is None:
+        return BGGClient(API_TOKEN, requests_per_minute=RPM)
+    return bgg
+
+
 def get_guild_user_list(guild_id, bgg=None):
     """retrieve the member list for a BGG guild"""
-    if bgg is None:
-        bgg = BGGClient()
+    bgg = _get_bgg_client(bgg)
     logger.info("retrieving guild user list")
     guild = bgg.guild(guild_id)
     return list(guild.members)
@@ -46,8 +63,7 @@ def get_guild_user_list(guild_id, bgg=None):
 
 def get_user_ratings(username, bgg=None):
     """returns a dict: gameid -> rating"""
-    if bgg is None:
-        bgg = BGGClient()
+    bgg = _get_bgg_client(bgg)
     user_ratings = dict()
     collection = bgg.collection(username, rated=True)
     print(collection)
@@ -60,8 +76,7 @@ def get_user_ratings(username, bgg=None):
 def get_game_info(game_id, bgg=None):
     """retrieve the BGG info for game having game_id"""
     logger.info(f"retrieving info for game {game_id}")
-    if bgg is None:
-        bgg = BGGClient()
+    bgg = _get_bgg_client(bgg)
     game = None
     while game is None:
         try:
@@ -94,8 +109,7 @@ def get_all_ratings(members, bgg=None):
         returns: a dict (gameid, game name) -> list of ratings
         and a list of users which data was not available
     """
-    if bgg is None:
-        bgg = BGGClient()
+    bgg = _get_bgg_client(bgg)
     all_member_ratings = dict()
     logger.info("retrieving user ratings ...")
     work_queue = Queue()
@@ -157,7 +171,7 @@ def main(b, n, s, guild, concat=False,
         else:
             guild_id = guild
         logger.info(f"guild: {guild} => id: {guild_id}")
-    bgg = BGGClient()
+    bgg = _get_bgg_client()
     # if not users and not raw_data: get users + user ratings, process ratings
     # if users and not raw_data: load users, get user ratings, process ratings
     # if raw data: load users + user ratings, process ratings
