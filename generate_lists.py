@@ -157,6 +157,29 @@ def collapse_ratings(member_ratings):
     return guild_ratings
 
 
+def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
+    games.sort(key=sort_key, reverse=reverse)
+    result = []
+    count = 0
+    for game in games:
+        gameid = str(game[0])
+        try:
+            info = game_infos[gameid]
+            logger.info(f"read info for game {gameid} from cache")
+        except KeyError:
+            game_info = get_game_info(gameid, bgg)
+            info = {"name": game_info.name, "expansion": game_info.expansion}
+            game_infos[gameid] = info
+
+        if not info["expansion"]:
+            count += 1
+            result.append((info["name"], game[0], game[1], game[2], game[3]))
+
+        if count >= limit:
+            break
+    return result
+
+
 def main(b, n, s, guild, concat=False,
          raw_data=None, prune=False, users=None):
     if users is None or concat is True:
@@ -282,151 +305,24 @@ def main(b, n, s, guild, concat=False,
         logger.error(f"could not open {filename}, creating new dict()")
         game_infos = dict()
 
-    # get the top x
+    # get the lists
     logger.info("get top games")
-    top = list()
-    top_games.sort(key=lambda x: x[2], reverse=True)
-    count_of_printed = 0
-    for game in top_games:
-        gameid = str(game[0])
-        # game_name available from file else load from BGG
-        try:
-            game_name = game_infos[gameid]["name"]
-            logger.info(f"read info for game {gameid} from {filename}")
-            if not game_infos[gameid]["expansion"]:
-                count_of_printed += 1
-                top.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                top.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > n - 1:
-            break
-    # get the bottom x
+    top = _build_game_list(top_games, n, game_infos, bgg, lambda x: x[2], True)
+
     logger.info("get bottom games")
-    bottom = list()
-    top_games.sort(key=lambda x: x[2])
-    count_of_printed = 0
-    for game in top_games:
-        gameid = str(game[0])
-        try:
-            game_name = game_infos[gameid]["name"]
-            if not game_infos[gameid]["expansion"]:
-                logger.info(f"read info for game {gameid} from {filename}")
-                count_of_printed += 1
-                bottom.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                bottom.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > b - 1:
-            break
-    # get the most variable
+    bottom = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[2], False)
+
     logger.info("get most varied games")
-    variance = list()
-    top_games.sort(key=lambda x: x[3], reverse=True)
-    count_of_printed = 0
-    for game in top_games:
-        gameid = str(game[0])
-        try:
-            game_name = game_infos[gameid]["name"]
-            if not game_infos[gameid]["expansion"]:
-                logger.info(f"read info for game {gameid} from {filename}")
-                count_of_printed += 1
-                variance.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                variance.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > b - 1:
-            break
-    # get the least variable
+    variance = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[3], True)
+
     logger.info("get most similar games")
-    similar = list()
-    top_games.sort(key=lambda x: x[3], reverse=False)
-    count_of_printed = 0
-    for game in top_games:
-        gameid = str(game[0])
-        try:
-            game_name = game_infos[gameid]["name"]
-            if not game_infos[gameid]["expansion"]:
-                logger.info(f"read info for game {gameid} from {filename}")
-                count_of_printed += 1
-                similar.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                similar.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > b - 1:
-            break
-    # get the most rated
+    similar = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[3], False)
+
     logger.info("get most rated games")
-    most_rated = list()
-    top_games.sort(key=lambda x: x[1], reverse=True)
-    count_of_printed = 0
-    for game in top_games:
-        gameid = str(game[0])
-        try:
-            game_name = game_infos[gameid]["name"]
-            if not game_infos[gameid]["expansion"]:
-                logger.info(f"read info for game {gameid} from {filename}")
-                count_of_printed += 1
-                most_rated.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                most_rated.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > b - 1:
-            break
-    # get sleepers
+    most_rated = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[1], True)
+
     logger.info("get sleepers")
-    sleepers = list()
-    sleeper_games.sort(key=lambda x: x[2], reverse=True)
-    count_of_printed = 0
-    for game in sleeper_games:
-        gameid = str(game[0])
-        try:
-            game_name = game_infos[gameid]["name"]
-            if not game_infos[gameid]["expansion"]:
-                logger.info(f"read info for game {gameid} from {filename}")
-                count_of_printed += 1
-                sleepers.append(
-                    (game_name, game[0], game[1], game[2], game[3]))
-        except KeyError:
-            game_info = get_game_info(gameid, bgg)
-            game_infos[gameid] = {"name": game_info.name,
-                                  "expansion": game_info.expansion}
-            if not game_info.expansion:
-                count_of_printed += 1
-                sleepers.append(
-                    (game_info.name, game[0], game[1], game[2], game[3]))
-        if count_of_printed > s - 1:
-            break
+    sleepers = _build_game_list(sleeper_games, s, game_infos, bgg, lambda x: x[2], True)
 
     # save game_infos
     with open(filename, "w") as fi:
