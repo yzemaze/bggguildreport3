@@ -8,7 +8,7 @@ def main(user, member_data_file):
     user_collection_size = len(user_data)
 
     member_scores = list()
-    for user, ratings in member_data.items():
+    for member_user, ratings in member_data.items():
         score = 0
         games_in_common = 0
         for game, rating in user_data.items():
@@ -17,7 +17,7 @@ def main(user, member_data_file):
                 score += diff
                 games_in_common += 1
         member_scores.append(
-            {"user": user, "score": score, "common": games_in_common})
+            {"user": member_user, "score": score, "common": games_in_common})
 
     member_scores = [x for x in member_scores if x[
         "common"] >= 0.5 * user_collection_size]
