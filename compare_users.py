@@ -1,7 +1,7 @@
 import yaml
 def main(user, member_data_file):
     with open(member_data_file, "r") as data_file:
-        member_data = yaml.load(data_file)
+        member_data = yaml.safe_load(data_file)
 
     user_data = member_data[user]
     del member_data[user]
