@@ -13,6 +13,7 @@ import json
 import logging
 import math
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from queue import Queue
 from statistics import mean, stdev
@@ -123,39 +124,35 @@ def get_all_ratings(members, bgg=None):
     bgg = _get_bgg_client(bgg)
     all_member_ratings = dict()
     logger.info("retrieving user ratings ...")
-    work_queue = Queue()
-    retry_queue = Queue()
+    
     failed = list()
-    for member in members:
-        work_queue.put(member)
-    while not work_queue.empty():
-        logger.info(f"{work_queue.qsize()} members to process")
-        member = work_queue.get()
+    
+    def fetch_user(member):
         logger.info(f"retrieving data for {member}")
         try:
             user_ratings = get_user_ratings(member, bgg=bgg)
             logger.info(f"data retrieved for {member}")
+            return member, user_ratings
         except Exception as e:
             if str(e) == "Invalid username specified":
                 logger.info(f"invalid username: {member}")
                 failed.append(member)
             else:
-                logger.info(e)
-                logger.info(f"request queued for {member}")
-                retry_queue.put(member)
-            continue
-        all_member_ratings[member] = user_ratings
-    while not retry_queue.empty():
-        logger.info(f"{retry_queue.qsize()} members to retry")
-        member = retry_queue.get()
-        logger.info(f"retrieving data for {member}")
-        try:
-            user_ratings = get_user_ratings(member, bgg=bgg)
-        except Exception:
-            logger.info(f"no data available for {member}")
-            failed.append(member)
-            continue
-        all_member_ratings[member] = user_ratings
+                logger.info(f"error retrieving {member}: {e}")
+                # We could implement retries here or just mark as failed
+                failed.append(member)
+            return member, None
+
+    # Using threads to fetch concurrently. 
+    # Note: BGGClient handles its own rate limiting (RPM).
+    # Too many threads might still hit issues, but a small pool is fine.
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        results = list(executor.map(fetch_user, members))
+    
+    for member, ratings in results:
+        if ratings is not None:
+            all_member_ratings[member] = ratings
+            
     logger.info(f"could not retrieve ratings for {len(failed)} users\n"
                 f"{failed}")
     return all_member_ratings, failed
@@ -177,7 +174,6 @@ def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
         gameid = str(game[0])
         if gameid not in game_infos:
             missing_ids.append(int(gameid))
-            # Optimization: don't fetch everything if we likely have enough
             if len(missing_ids) >= limit * 2: 
                 break
     
@@ -192,7 +188,6 @@ def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
         gameid = str(game[0])
         info = game_infos.get(gameid)
         if not info:
-            # Fallback for games not batched
             game_info = get_game_info(gameid, bgg)
             info = {"name": game_info.name, "expansion": game_info.expansion}
             game_infos[gameid] = info
