@@ -133,20 +133,35 @@ if __name__ == "__main__":
     diff_file = f"diff_{date_str}.{ext}"
 
     with open(args.old_file, "r", encoding="utf-8") as oldf:
-        old_lists = json.load(oldf)
+        old_lists_raw = json.load(oldf)
 
     with open(args.new_file, "r", encoding="utf-8") as newf:
-        new_lists = json.load(newf)
+        new_lists_raw = json.load(newf)
+
+    # Convert old lists to a dictionary for category-based matching
+    old_lists_map = {lst["category"]: lst["games"] for lst in old_lists_raw["lists"]}
+
+    # Mapping of category IDs to localized headlines
+    category_headlines = {
+        "top": _("Top"),
+        "bottom": _("Bottom"),
+        "variance": _("Most Varied"),
+        "similar": _("Most Similar"),
+        "most_rated": _("Most Rated"),
+        "sleepers": _("Sleepers")
+    }
 
     with open(diff_file, "w", encoding="utf-8") as of:
-        i = 0
-        headlines = [
-            _("Top"), _("Bottom"), _("Most Varied"), _("Most Similar"),
-            _("Most Rated"), _("Sleepers")]
-        for d in new_lists["lists"]:
-            print_list(old_lists["lists"][i]["games"], d["games"],
-                       headlines[i], style, of)
-            logger.info(f"formatted printing of {headlines[i]} with +/- done")
-            i += 1
+        for new_list_data in new_lists_raw["lists"]:
+            category = new_list_data["category"]
+            headline = category_headlines.get(category, category.capitalize())
+            
+            if category in old_lists_map:
+                print_list(old_lists_map[category], new_list_data["games"],
+                           headline, style, of)
+                logger.info(f"formatted printing of {headline} with +/- done")
+            else:
+                logger.warning(f"category {category} not found in old data")
+                print_list([], new_list_data["games"], headline, style, of)
 
     logger.info(f"+/- saved to {diff_file}")
