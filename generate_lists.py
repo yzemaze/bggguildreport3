@@ -75,16 +75,27 @@ def get_user_ratings(username, bgg=None):
 
 def get_game_info(game_id, bgg=None):
     """retrieve the BGG info for game having game_id"""
-    logger.info(f"retrieving info for game {game_id}")
+    return get_game_info_batch([game_id], bgg)[0]
+
+
+def get_game_info_batch(game_ids, bgg=None):
+    """retrieve the BGG info for a list of game_ids"""
+    if not game_ids:
+        return []
+    logger.info(f"retrieving info for {len(game_ids)} games")
     bgg = _get_bgg_client(bgg)
-    game = None
-    while game is None:
-        try:
-            game = bgg.game(game_id=game_id)
-        except Exception:
-            logger.info("Trying to retrieve again ...")
-            continue
-    return game
+    games = []
+    chunk_size = 20
+    for i in range(0, len(game_ids), chunk_size):
+        chunk = game_ids[i:i + chunk_size]
+        while True:
+            try:
+                games.extend(bgg.game_list(chunk))
+                break
+            except Exception as e:
+                logger.info(f"Trying to retrieve chunk again due to: {e}")
+                continue
+    return games
 
 
 def add_individual_to_group_ratings(master_dict, user_dict):
@@ -159,14 +170,29 @@ def collapse_ratings(member_ratings):
 
 def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
     games.sort(key=sort_key, reverse=reverse)
+    
+    # Pre-fetch missing game info in batches
+    missing_ids = []
+    for game in games:
+        gameid = str(game[0])
+        if gameid not in game_infos:
+            missing_ids.append(int(gameid))
+            # Optimization: don't fetch everything if we likely have enough
+            if len(missing_ids) >= limit * 2: 
+                break
+    
+    if missing_ids:
+        fetched_games = get_game_info_batch(missing_ids, bgg)
+        for g in fetched_games:
+            game_infos[str(g.id)] = {"name": g.name, "expansion": g.expansion}
+
     result = []
     count = 0
     for game in games:
         gameid = str(game[0])
-        try:
-            info = game_infos[gameid]
-            logger.info(f"read info for game {gameid} from cache")
-        except KeyError:
+        info = game_infos.get(gameid)
+        if not info:
+            # Fallback for games not batched
             game_info = get_game_info(gameid, bgg)
             info = {"name": game_info.name, "expansion": game_info.expansion}
             game_infos[gameid] = info
