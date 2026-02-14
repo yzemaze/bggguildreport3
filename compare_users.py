@@ -1,4 +1,5 @@
 import yaml
+from pathlib import Path
 def calculate_similarity(user_data, other_ratings):
     user_game_ids = set(user_data.keys())
     common_games = user_game_ids & set(other_ratings.keys())
@@ -28,8 +29,8 @@ def main(user, member_data_file):
         "common"] >= 0.5 * user_collection_size]
     member_scores.sort(key=lambda x: x["score"])
 
-    filename = user + "_followers.yml"
-    with open(filename, "w") as fo:
+    output_path = Path(f"{user}_followers.yml")
+    with output_path.open("w") as fo:
         yaml.dump(member_scores, fo)
 
     for i in range(min(5, len(member_scores))):
