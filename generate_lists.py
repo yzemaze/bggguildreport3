@@ -208,172 +208,138 @@ def _build_game_list(games, limit, game_infos, bgg, sort_key, reverse=True):
     return result
 
 
+def get_guild_members(guild_id, users_file=None, concat=False, bgg=None):
+    """load members from file and/or query for current list"""
+    date_str = datetime.datetime.now().strftime("%Y%m%d")
+    if users_file is None:
+        members = get_guild_user_list(guild_id, bgg=bgg)
+        with open(f"members_{date_str}.txt", "w") as of:
+            for member in members:
+                print(member, file=of)
+    elif concat:
+        members_file = load_members_from_file(users_file)
+        members_guild = get_guild_user_list(guild_id, bgg=bgg)
+        members = list(set(member.lower() for member in (members_file + members_guild)))
+        members.sort()
+        with open(f"members_{date_str}.txt", "w") as of:
+            for member in members:
+                print(member, file=of)
+    else:
+        members = load_members_from_file(users_file)
+        members = sorted(set(member.lower() for member in members))
+    return members
+
+
+def process_guild_ratings(members, bgg=None):
+    """fetch ratings for all members and collapse them into guild ratings"""
+    member_ratings, invalid_users = get_all_ratings(members, bgg=bgg)
+    guild_size = len(members) - len(invalid_users)
+    logger.info(f"members list loaded: {guild_size} members")
+    guild_ratings = collapse_ratings(member_ratings)
+    
+    logger.info("processing results ...")
+    all_games = []
+    for game_id, ratings in guild_ratings.items():
+        num_ratings = len(ratings)
+        avg_rating = round(mean(ratings), 3)
+        sd_ratings = round(stdev(ratings), 3) if num_ratings > 1 else 0
+        all_games.append((game_id, num_ratings, avg_rating, sd_ratings))
+    
+    all_games.sort(key=lambda x: x[2], reverse=True)
+    return all_games, member_ratings, guild_size
+
+
+def export_results(rating_data, member_ratings, date_str):
+    """save guild data and member ratings to files"""
+    with open(f"guild_data_{date_str}.json", "w") as f:
+        json.dump(rating_data, f)
+        logger.info(f"guild data saved to guild_data_{date_str}.json")
+    with open(f"member_data_{date_str}.yml", "w") as f:
+        yaml.dump(member_ratings, f)
+        logger.info(f"member ratings saved to member_data_{date_str}.yml")
+
+
 def main(b, n, s, guild, concat=False,
          raw_data=None, prune=False, users=None):
-    if users is None or concat is True:
-        if guild == "hc":
-            guild_id = HEAVY_CARDBOARD
-        elif guild == "pc":
-            guild_id = PUNCHING_CARDBOARD
-        elif guild == "uk":
-            guild_id = UNKNOWNS
-        elif guild == "test":
-            guild_id = TEST
-        else:
-            guild_id = guild
-        logger.info(f"guild: {guild} => id: {guild_id}")
+    # Resolve guild ID
+    guild_map = {"hc": HEAVY_CARDBOARD, "pc": PUNCHING_CARDBOARD, "uk": UNKNOWNS, "test": TEST}
+    guild_id = guild_map.get(guild, guild)
+    logger.info(f"guild: {guild} => id: {guild_id}")
+    
     bgg = _get_bgg_client()
-    # if not users and not raw_data: get users + user ratings, process ratings
-    # if users and not raw_data: load users, get user ratings, process ratings
-    # if raw data: load users + user ratings, process ratings
     date_str = datetime.datetime.now().strftime("%Y%m%d")
+    
     if raw_data is None:
-        if concat is False:
-            # load members from file or query for current list
-            if users is None:
-                members = get_guild_user_list(guild_id, bgg=bgg)
-                with open(f"members_{date_str}.txt", "w") as of:
-                    for member in members:
-                        print(member, file=of)
-            else:
-                members = load_members_from_file(users)
-                members = [member.lower() for member in members]
-                members = sorted(set(members))
-        else:
-            # concatenate members from file and guild members
-            members_file = load_members_from_file(users)
-            members_guild = get_guild_user_list(guild_id, bgg=bgg)
-            members = members_file + members_guild
-            members = [member.lower() for member in members]
-            members = sorted(set(members))
-            with open(f"members_{date_str}.txt", "w") as of:
-                for member in members:
-                    print(member, file=of)
+        members = get_guild_members(guild_id, users, concat, bgg)
+        all_games, member_ratings, guild_size = process_guild_ratings(members, bgg)
+        
+        rating_data = {
+            SUMMARY: {GUILD_MEMBER_COUNT: guild_size, TOTAL_GAMES: len(all_games), TIME: str(datetime.datetime.now())},
+            MEMBERS: members,
+            SORTED_GAMES: all_games
+        }
+        export_results(rating_data, member_ratings, date_str)
+    else:
+        with open(raw_data, "r") as f:
+            rating_data = json.load(f)
+        all_games = rating_data[SORTED_GAMES]
+        guild_size = rating_data[SUMMARY][GUILD_MEMBER_COUNT]
 
-        member_ratings, invalid_users = get_all_ratings(members, bgg=bgg)
-        guild_size = len(members) - len(invalid_users)
-        logger.info(f"members list loaded: {guild_size} members")
-        guild_ratings = collapse_ratings(member_ratings)
-
-        logger.info("processing results ...")
-        logger.info(f"{len(guild_ratings)} games rated")
-        all_games = list()
-        for game_id, ratings in guild_ratings.items():
-            num_ratings = len(ratings)
-            avg_rating = round(mean(ratings), 3)
-            if num_ratings > 1:
-                sd_ratings = round(stdev(ratings), 3)
-            else:
-                sd_ratings = 0
-            all_games.append((game_id, num_ratings, avg_rating, sd_ratings))
-
-        all_games.sort(key=lambda x: x[2], reverse=True)
-
-        # dump raw data into files
-        current_time_str = str(datetime.datetime.now())
-        rating_data = dict()
-        rating_data[SUMMARY] = {GUILD_MEMBER_COUNT: guild_size,
-                                TOTAL_GAMES: len(guild_ratings),
-                                TIME: current_time_str
-                                }
-        rating_data[MEMBERS] = members
-        rating_data[SORTED_GAMES] = all_games
-        with open(f"guild_data_{date_str}.json", "w") as raw_data_file:
-            json.dump(rating_data, raw_data_file)
-            logger.info(f"guild data saved to guild_data_{date_str}.json")
-        with open(f"member_data_{date_str}.yml", "w") as raw_data_file:
-            yaml.dump(member_ratings, raw_data_file)
-            logger.info(f"member ratings saved to member_data_{date_str}.yml")
-    elif raw_data is not None:
-        rating_data = json.load(open(raw_data, "r"))
-
-    # either path we now have rating_data
-    all_games = rating_data[SORTED_GAMES]
-    member_count = rating_data[SUMMARY][GUILD_MEMBER_COUNT]
-
-    # if we want to prune the games
-    if prune is True:
-        pruned_games = list()
+    if prune:
+        # Pruning logic
+        pruned_games = []
         with open(prune, "r") as f:
             reader = csv.reader(f)
             for row in reader:
                 gameid = int(row[0])
                 matches = [x for x in all_games if x[0] == gameid]
-                if len(matches) == 1:
-                    match = matches[0]
-                    matched_game = (
-                        row[1], match[0], match[1], match[2], match[3])
-                elif len(matches) == 0:
-                    matched_game = (row[1], gameid, 0, 0, 0)
-                else:
-                    logger.error("could not read pruned_games")
-                    return
-                pruned_games.append(matched_game)
+                match = matches[0] if matches else (gameid, 0, 0, 0)
+                pruned_games.append((row[1], match[0], match[1], match[2], match[3]))
+        
         pruned_games.sort(key=lambda x: x[3], reverse=True)
-
-        max_name_width = max([len(game[0]) for game in pruned_games])
-        for idx, game in enumerate(pruned_games):
-            print(f"{idx + 1:2} {game[0]:{max_name_width}} {game[2]:3} "
-                  f"{game[3]:5.3f} {game[4]:5.3f}")
+        max_name_width = max(len(g[0]) for g in pruned_games)
+        for idx, g in enumerate(pruned_games):
+            print(f"{idx + 1:2} {g[0]:{max_name_width}} {g[2]:3} {g[3]:5.3f} {g[4]:5.3f}")
         return
-    else:
-        top_games = [x for x in all_games if x[1] >= 0.1 * member_count]
-        sleeper_games = [
-            x for x in all_games
-            if x[1] < 0.1 * member_count
-            and x[1] >= 0.02 * member_count
-            and x[2] >= 7.5]
 
-    # get game infos from file if possible, else create dict
+    # Filter games
+    member_count = rating_data[SUMMARY][GUILD_MEMBER_COUNT]
+    top_games = [x for x in all_games if x[1] >= 0.1 * member_count]
+    sleeper_games = [x for x in all_games if 0.02 * member_count <= x[1] < 0.1 * member_count and x[2] >= 7.5]
+
+    # Load cache
     filename = "game_infos.json"
     try:
         with open(filename, "r") as fi:
             game_infos = json.load(fi)
     except IOError:
-        logger.error(f"could not open {filename}, creating new dict()")
-        game_infos = dict()
+        game_infos = {}
 
-    # get the lists
-    logger.info("get top games")
-    top = _build_game_list(top_games, n, game_infos, bgg, lambda x: x[2], True)
+    # Build lists
+    logger.info("building game lists")
+    lists = [
+        ("top", n, top_games, lambda x: x[2], True),
+        ("bottom", b, top_games, lambda x: x[2], False),
+        ("variance", b, top_games, lambda x: x[3], True),
+        ("similar", b, top_games, lambda x: x[3], False),
+        ("most_rated", b, top_games, lambda x: x[1], True),
+        ("sleepers", s, sleeper_games, lambda x: x[2], True)
+    ]
+    
+    lists_dict = {"lists": []}
+    for category, count, source, key, rev in lists:
+        logger.info(f"get {category} games")
+        result = _build_game_list(source, count, game_infos, bgg, key, rev)
+        lists_dict["lists"].append({"category": category, "count": count, "games": result})
 
-    logger.info("get bottom games")
-    bottom = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[2], False)
-
-    logger.info("get most varied games")
-    variance = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[3], True)
-
-    logger.info("get most similar games")
-    similar = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[3], False)
-
-    logger.info("get most rated games")
-    most_rated = _build_game_list(top_games, b, game_infos, bgg, lambda x: x[1], True)
-
-    logger.info("get sleepers")
-    sleepers = _build_game_list(sleeper_games, s, game_infos, bgg, lambda x: x[2], True)
-
-    # save game_infos
+    # Final save
     with open(filename, "w") as fi:
         json.dump(game_infos, fi)
-
-    # save lists
-    lists_dict = dict()
-    lists_dict["lists"] = []
-    lists_dict["lists"].append(
-        {"category": "top", "count": n, "games": top})
-    lists_dict["lists"].append(
-        {"category": "bottom", "count": b, "games": bottom})
-    lists_dict["lists"].append({
-        "category": "variance", "count": b, "games": variance})
-    lists_dict["lists"].append(
-        {"category": "similar", "count": b, "games": similar})
-    lists_dict["lists"].append({
-        "category": "most_rated", "count": b, "games": most_rated})
-    lists_dict["lists"].append(
-        {"category": "sleepers", "count": s, "games": sleepers})
+    
     with open(f"lists_{date_str}.json", "w") as fi:
         json.dump(lists_dict, fi)
     logger.info(f"games lists saved to lists_{date_str}.json")
+
 
 if __name__ == "__main__":
     logging.basicConfig(filename="std.log", encoding="utf-8",
@@ -381,40 +347,15 @@ if __name__ == "__main__":
     logger = logging.getLogger()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-b", type=int, default=10,
-        help="output the bottom, most/least variable & most rated B games")
-    parser.add_argument(
-        "-c", "--concat",
-        action="store_true",
-        help="concatenate lists of users and guild members")
-    parser.add_argument(
-        "-g", "--guild",
-        help="guild-id or one of [hc, pc, uk, test]")
-    parser.add_argument(
-        "-n", type=int, default=50,
-        help="output the top N games, default=50")
-    parser.add_argument(
-        "-p", "--prune",
-        action="store_true",
-        help="prune raw data to a specific list of games")
-    parser.add_argument(
-        "-r", "--raw",
-        help="RAW = guild_data_YYYYMMDD.json to regenerate final data")
-    parser.add_argument(
-        "-s", type=int, default=50,
-        help="output the top S sleepers, default=50")
-    parser.add_argument(
-        "-u", "--users",
-        help="use provided file of users instead of pulling a new one")
+    parser.add_argument("-b", type=int, default=10, help="bottom size")
+    parser.add_argument("-c", "--concat", action="store_true", help="concat members")
+    parser.add_argument("-g", "--guild", help="guild id")
+    parser.add_argument("-n", type=int, default=50, help="top size")
+    parser.add_argument("-p", "--prune", help="prune list")
+    parser.add_argument("-r", "--raw", help="raw data json")
+    parser.add_argument("-s", type=int, default=50, help="sleeper size")
+    parser.add_argument("-u", "--users", help="users file")
     args = parser.parse_args()
 
-    main(
-        b=args.b,
-        concat=args.concat,
-        guild=args.guild,
-        n=args.n,
-        prune=args.prune,
-        raw_data=args.raw,
-        s=args.s,
-        users=args.users)
+    main(b=args.b, concat=args.concat, guild=args.guild, n=args.n,
+         prune=args.prune, raw_data=args.raw, s=args.s, users=args.users)
