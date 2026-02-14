@@ -5,6 +5,9 @@ import json
 import logging
 from pathlib import Path
 
+# Initialize module-level logger
+logger = logging.getLogger(__name__)
+
 
 def calculate_diffs(old_list, new_list):
     """Calculate differences between old and new lists."""
@@ -101,10 +104,9 @@ def print_list(diffs, headline, style, of, labels):
         print("[/c]", file=of)
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(filename="std.log", encoding="utf-8",
                         format="%(asctime)s %(message)s", level=logging.DEBUG)
-    logger = logging.getLogger()
 
     parser = argparse.ArgumentParser(
         description="Print lists with diffs in a pretty format")
@@ -164,3 +166,7 @@ if __name__ == "__main__":
             logger.info(f"formatted printing of {headline} done")
 
     logger.info(f"+/- saved to {diff_file}")
+
+
+if __name__ == "__main__":
+    main()
