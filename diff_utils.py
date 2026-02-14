@@ -1,10 +1,14 @@
+"""
+Utility functions for calculating and rendering differences between game lists.
+"""
+
 import logging
 from typing import List, Dict, Any, Tuple, TextIO, Callable, Optional
 
 # Initialize logger
 logger = logging.getLogger(__name__)
 
-# Style templates
+# Style templates for rendering reports
 TEMPLATES = {
     "html": {
         "header_start": lambda h, labels, specs: (
@@ -44,7 +48,18 @@ TEMPLATES = {
 
 
 def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> List[Dict[str, Any]]:
-    """Calculate differences between old and new lists."""
+    """
+    Calculate differences between an old and a new list of games.
+
+    Args:
+        old_list: A list of game data tuples from the previous report.
+        new_list: A list of game data tuples from the current report.
+
+    Returns:
+        A list of dictionaries containing calculated differences for each game.
+        Each dictionary includes keys: index, diff_index, name, ratings, 
+        diff_ratings, mean, diff_mean, and sd.
+    """
     old_lookup = {game[1]: (idx, game[2], game[3]) for idx, game in enumerate(old_list)}
     diffs = []
     for index, game_info in enumerate(new_list):
@@ -71,7 +86,16 @@ def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> Lis
 
 
 def print_list(diffs: List[Dict[str, Any]], headline: str, style: str, of: TextIO, labels: List[str]) -> None:
-    """Print the pre-calculated diffs in the given style."""
+    """
+    Render a list of game differences to a file handle using a specific style.
+
+    Args:
+        diffs: Pre-calculated list of difference dictionaries.
+        headline: The title of the report section.
+        style: The output format (e.g., 'html', 'bbcode', 'text').
+        of: A file-like object for output.
+        labels: A list of header labels for the report table.
+    """
     tpl = TEMPLATES.get(style, TEMPLATES["text"])
     
     name_width = max(len(d["name"]) for d in diffs) if diffs else 10
