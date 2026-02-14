@@ -1,5 +1,7 @@
 import yaml
 from pathlib import Path
+
+
 def calculate_similarity(user_data, other_ratings):
     user_game_ids = set(user_data.keys())
     common_games = user_game_ids & set(other_ratings.keys())
