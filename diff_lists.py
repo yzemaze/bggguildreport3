@@ -5,7 +5,7 @@ import json
 import logging
 
 
-def print_list(old_list, new_list, headline, style):
+def print_list(old_list, new_list, headline, style, of):
     """ print list per category in given style with +/- to file."""
     old_gameids = [x[1] for x in old_list]
     old_ratings = [x[2] for x in old_list]
@@ -153,7 +153,7 @@ if __name__ == "__main__":
             _("Most Rated"), _("Sleepers")]
         for d in new_lists["lists"]:
             print_list(old_lists["lists"][i]["games"], d["games"],
-                       headlines[i], style)
+                       headlines[i], style, of)
             logger.info(f"formatted printing of {headlines[i]} with +/- done")
             i += 1
 
