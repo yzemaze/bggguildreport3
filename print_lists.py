@@ -1,8 +1,9 @@
 import argparse
 import datetime
-import gettext
 import json
 import logging
+from pathlib import Path
+import diff_utils
 
 
 def print_list(category, games, headline, count, style, of):
@@ -73,10 +74,7 @@ if __name__ == "__main__":
         help="language used for headlines and tableheaders")
     args = parser.parse_args()
 
-    lang = gettext.translation("print_lists", localedir="locales",
-                               languages=[args.lang])
-    lang.install()
-    _ = lang.gettext
+    _ = diff_utils.setup_translation("print_lists", args.lang)
 
     with open(args.filename) as f:
         data = json.load(f)
