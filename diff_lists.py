@@ -86,21 +86,30 @@ def print_list(diffs, headline, style, of, labels):
             print(tpl["row_end"], file=of)
         print(tpl["footer"], file=of)
     else:
-        # Default text style
+        # Default text style with declarative formatting
         name_width = max(len(d["name"]) for d in diffs) if diffs else 10
         ratings_width = max(len(labels[3]), 4)
         mean_width = max(len(labels[5]), 5)
+        
+        # Column specifications: (width, alignment)
+        col_specs = [
+            (3, ">"), (5, ">"), (name_width, "<"), (ratings_width, ">"),
+            (6, ">"), (mean_width, ">"), (9, ">"), (6, ">")
+        ]
+        
+        def format_row(values):
+            return " ".join(f"{str(val):{width}{align}}" for val, (width, align) in zip(values, col_specs))
+
         print(f"[b]{headline}[/b]\n[c]", file=of)
-        print(f"{labels[0]:3} {labels[1]:5} {labels[2]:{name_width}} "
-              f"{labels[3]:{ratings_width}} {labels[4]:6} "
-              f"{labels[5]:{mean_width}} {labels[6]:9} {labels[7]:5}", file=of)
+        print(format_row(labels), file=of)
 
         for d in diffs:
-            print(f"{d['index']:3} {d['diff_index']:5} "
-                  f"{d['name']:{name_width}} "
-                  f"{d['ratings']:{ratings_width}} {d['diff_ratings']:6} "
-                  f"{d['mean']:{mean_width}.3f} {d['diff_mean']:8} "
-                  f"{d['sd']:6.3f}", file=of)
+            row_values = [
+                d["index"], d["diff_index"], d["name"], d["ratings"],
+                d["diff_ratings"], f"{d['mean']:.3f}", d["diff_mean"],
+                f"{d['sd']:.3f}"
+            ]
+            print(format_row(row_values), file=of)
         print("[/c]", file=of)
 
 
