@@ -89,20 +89,27 @@ if __name__ == "__main__":
 
         date_str = datetime.datetime.now().strftime("%Y%m%d")
         filename = f"output_{date_str}.{ext}"
+        
+        category_headlines = {
+            "top": _("Top"),
+            "bottom": _("Bottom"),
+            "variance": _("Most Varied"),
+            "similar": _("Most Similar"),
+            "most_rated": _("Most Rated"),
+            "sleepers": _("Sleepers")
+        }
+
         with open(filename, "w") as of:
-            headlines = [
-                _("Top"), _("Bottom"),
-                _("Most Varied"), _("Most Similar"),
-                _("Most Rated"), _("Sleepers")]
             if style == "html":
                 print(f"<style>\n"
                       f".text-right {{text-align: right; padding: 0 5px;}}\n"
                       f"</style>", file=of)
-            i = 0
+            
             for d in data["lists"]:
-                print_list(d["category"], d["games"],
-                           headlines[i], d["count"], style, of)
-                logger.info(f"formatted printing of {headlines[i]} done")
-                i += 1
+                category = d["category"]
+                headline = category_headlines.get(category, category.capitalize())
+                print_list(category, d["games"],
+                           headline, d["count"], style, of)
+                logger.info(f"formatted printing of {headline} done")
 
     logger.info(f"formatted lists saved to {filename}")
