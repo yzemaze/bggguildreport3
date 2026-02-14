@@ -1,10 +1,11 @@
 import logging
+from typing import List, Dict, Any, Tuple, TextIO, Callable
 
 # Initialize logger
 logger = logging.getLogger(__name__)
 
 
-def calculate_diffs(old_list, new_list):
+def calculate_diffs(old_list: List[List[Any]], new_list: List[List[Any]]) -> List[Dict[str, Any]]:
     """Calculate differences between old and new lists."""
     old_lookup = {game[1]: (idx, game[2], game[3]) for idx, game in enumerate(old_list)}
     diffs = []
@@ -31,7 +32,7 @@ def calculate_diffs(old_list, new_list):
     return diffs
 
 
-def print_list(diffs, headline, style, of, labels):
+def print_list(diffs: List[Dict[str, Any]], headline: str, style: str, of: TextIO, labels: List[str]) -> None:
     """Print the pre-calculated diffs in the given style."""
     hlevel = "h3"
 
@@ -39,30 +40,19 @@ def print_list(diffs, headline, style, of, labels):
     templates = {
         "html": {
             "header_start": lambda h: (
-                f"<style>
-.text-right {{text-align: right; padding: 0 5px;}}
-</style>
-"
-                f"<{hlevel}>{h}</{hlevel}>
-"
-                f"<table id={h.replace(' ', '_')}>
-<thead>
-<tr>"
+                f"<style>\n.text-right {{text-align: right; padding: 0 5px;}}\n</style>\n"
+                f"<{hlevel}>{h}</{hlevel}>\n"
+                f"<table id={h.replace(' ', '_')}>\n<thead>\n<tr>"
             ),
             "th": lambda t: f"<th>{t}</th>",
-            "header_end": "</tr>
-</thead>
-<tbody>",
+            "header_end": "</tr>\n</thead>\n<tbody>",
             "row_start": "<tr>",
-            "td": lambda v, align="left": f"<td class="text-right">{v}</td>" if align == "right" else f"<td>{v}</td>",
+            "td": lambda v, align="left": f"<td class=\"text-right\">{v}</td>" if align == "right" else f"<td>{v}</td>",
             "row_end": "</tr>",
-            "footer": "</tbody>
-</table>"
+            "footer": "</tbody>\n</table>"
         },
         "bbcode": {
-            "header_start": lambda h: f"[{hlevel}]{h}[/{hlevel}]
-[table]
-[tr]",
+            "header_start": lambda h: f"[{hlevel}]{h}[/{hlevel}]\n[table]\n[tr]",
             "th": lambda t: f"[th]{t}[/th]",
             "header_end": "[/tr]",
             "row_start": "[tr]",
@@ -103,11 +93,10 @@ def print_list(diffs, headline, style, of, labels):
             (6, ">"), (mean_width, ">"), (9, ">"), (6, ">")
         ]
 
-        def format_row(values):
+        def format_row(values: List[Any]) -> str:
             return " ".join(f"{str(val):{width}{align}}" for val, (width, align) in zip(values, col_specs))
 
-        print(f"[b]{headline}[/b]
-[c]", file=of)
+        print(f"[b]{headline}[/b]\n[c]", file=of)
         print(format_row(labels), file=of)
 
         for d in diffs:
