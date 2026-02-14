@@ -35,27 +35,48 @@ def main():
     date_str = datetime.datetime.now().strftime("%Y%m%d")
     filename = Path(f"topdiff_{date_str}.{ext}")
 
-    try:
-        with open(args.old, "r", encoding="utf-8") as oldf:
-            old_lists = json.load(oldf)
-        with open(args.new, "r", encoding="utf-8") as newf:
-            new_lists = json.load(newf)
-    except Exception as e:
-        logger.error(f"error loading input files: {e}")
+    def load_json(file_path):
+        p = Path(file_path)
+        try:
+            with p.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            if LISTS_KEY not in data or not data[LISTS_KEY]:
+                logger.error(f"Invalid structure in {file_path}: missing or empty '{LISTS_KEY}'")
+                return None
+            return data
+        except FileNotFoundError:
+            logger.error(f"File not found: {file_path}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON from {file_path}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error loading {file_path}: {e}")
+        return None
+
+    old_lists = load_json(args.old)
+    new_lists = load_json(args.new)
+
+    if old_lists is None or new_lists is None:
         exit(1)
 
-    new_top = new_lists[LISTS_KEY][0][GAMES_KEY]
-    old_top = old_lists[LISTS_KEY][0][GAMES_KEY]
+    try:
+        new_top = new_lists[LISTS_KEY][0][GAMES_KEY]
+        old_top = old_lists[LISTS_KEY][0][GAMES_KEY]
+    except (IndexError, KeyError) as e:
+        logger.error(f"Error accessing game lists in data: {e}")
+        exit(1)
     
     headline = _("Top Diff")
     ths = [_("No."), _("+/-"), _("Game"), _("Ratings"), _("+/-"), _("Mean"), _("+/-"), _("SD")]
 
     diffs = diff_utils.calculate_diffs(old_top, new_top)
 
-    with open(filename, "w", encoding="utf-8") as of:
-        diff_utils.print_list(diffs, headline, style, of, ths)
-
-    logger.info(f"+/- saved to {filename}")
+    try:
+        with filename.open("w", encoding="utf-8") as of:
+            diff_utils.print_list(diffs, headline, style, of, ths)
+        logger.info(f"+/- saved to {filename}")
+    except Exception as e:
+        logger.error(f"Failed to save report to {filename}: {e}")
+        exit(1)
 
 
 if __name__ == "__main__":
