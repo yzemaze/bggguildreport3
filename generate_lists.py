@@ -209,20 +209,20 @@ def get_guild_members(guild_id, users_file=None, concat=False, bgg=None):
     date_str = datetime.datetime.now().strftime("%Y%m%d")
     if users_file is None:
         members = get_guild_user_list(guild_id, bgg=bgg)
-        with open(f"members_{date_str}.txt", "w") as of:
-            for member in members:
-                print(member, file=of)
     elif concat:
         members_file = load_members_from_file(users_file)
         members_guild = get_guild_user_list(guild_id, bgg=bgg)
-        members = list(set(member.lower() for member in (members_file + members_guild)))
-        members.sort()
+        members = members_file + members_guild
+    else:
+        members = load_members_from_file(users_file)
+
+    members = sorted(list(set(m.lower() for m in members)))
+
+    if users_file is None or concat:
         with open(f"members_{date_str}.txt", "w") as of:
             for member in members:
                 print(member, file=of)
-    else:
-        members = load_members_from_file(users_file)
-        members = sorted(set(member.lower() for member in members))
+
     return members
 
 
