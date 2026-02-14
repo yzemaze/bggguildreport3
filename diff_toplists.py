@@ -8,6 +8,10 @@ import diff_utils
 # Initialize module-level logger
 logger = logging.getLogger(__name__)
 
+# Constants for JSON data structure
+LISTS_KEY = "lists"
+GAMES_KEY = "games"
+
 
 def main():
     logging.basicConfig(filename="std.log", encoding="utf-8",
@@ -40,8 +44,8 @@ def main():
         logger.error(f"error loading input files: {e}")
         exit(1)
 
-    new_top = new_lists["lists"][0]["games"]
-    old_top = old_lists["lists"][0]["games"]
+    new_top = new_lists[LISTS_KEY][0][GAMES_KEY]
+    old_top = old_lists[LISTS_KEY][0][GAMES_KEY]
     
     headline = _("Top Diff")
     ths = [_("No."), _("+/-"), _("Game"), _("Ratings"), _("+/-"), _("Mean"), _("+/-"), _("SD")]
