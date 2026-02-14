@@ -14,6 +14,7 @@ import logging
 import math
 import os
 import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from queue import Queue
@@ -112,10 +113,7 @@ def get_game_info_batch(game_ids, bgg=None):
 def add_individual_to_group_ratings(master_dict, user_dict):
     """combine a user's ratings with the overall ratings"""
     for game, rating in user_dict.items():
-        if game in master_dict:
-            master_dict[game].append(rating)
-        else:
-            master_dict[game] = [rating]
+        master_dict[game].append(rating)
 
 
 def load_members_from_file(filename):
@@ -165,7 +163,7 @@ def get_all_ratings(members, bgg=None):
 
 
 def collapse_ratings(member_ratings):
-    guild_ratings = dict()
+    guild_ratings = defaultdict(list)
     for _, ratings in member_ratings.items():
         add_individual_to_group_ratings(guild_ratings, ratings)
     return guild_ratings
