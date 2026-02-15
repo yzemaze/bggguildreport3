@@ -133,29 +133,48 @@ def get_all_ratings(members, bgg=None):
     all_member_ratings = dict()
     logger.info("retrieving user ratings ...")
     
+    retry_queue = Queue()
     failed = list()
     
     def fetch_user(member):
         logger.info(f"retrieving data for {member}")
         try:
             user_ratings = get_user_ratings(member, bgg=bgg)
+            if not user_ratings:
+                logger.info(f"no ratings retrieved for {member}, queuing for retry")
+                return member, None, True
             logger.info(f"data retrieved for {member}")
-            return member, user_ratings
+            return member, user_ratings, False
         except Exception as e:
             if str(e) == "Invalid username specified":
                 logger.info(f"invalid username: {member}")
-                failed.append(member)
+                return member, None, False
             else:
                 logger.info(f"error retrieving {member}: {e}")
-                failed.append(member)
-            return member, None
+                logger.info(f"request queued for retry: {member}")
+                return member, None, True
 
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = list(executor.map(fetch_user, members))
     
-    for member, ratings in results:
-        if ratings is not None:
+    for member, ratings, should_retry in results:
+        if should_retry:
+            retry_queue.put(member)
+        elif ratings is not None:
             all_member_ratings[member] = ratings
+        else:
+            failed.append(member)
+
+    while not retry_queue.empty():
+        logger.info(f"{retry_queue.qsize()} members to retry")
+        member = retry_queue.get()
+        logger.info(f"retrieving data for {member}")
+        try:
+            user_ratings = get_user_ratings(member, bgg=bgg)
+            all_member_ratings[member] = user_ratings
+        except Exception:
+            logger.info(f"no data available for {member}")
+            failed.append(member)
             
     logger.info(f"could not retrieve ratings for {len(failed)} users\n"
                 f"{failed}")
