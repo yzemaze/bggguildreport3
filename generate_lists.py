@@ -275,7 +275,7 @@ def export_results(rating_data, member_ratings, date_str):
 
 
 def main(b, n, s, guild, concat=False,
-         raw_data=None, prune=False, users=None):
+         raw_data=None, prune=False, users=None, ratings_file=None):
     # Resolve guild ID
     guild_map = {"hc": HEAVY_CARDBOARD, "pc": PUNCHING_CARDBOARD, "uk": UNKNOWNS, "test": TEST}
     guild_id = guild_map.get(guild, guild)
@@ -285,15 +285,33 @@ def main(b, n, s, guild, concat=False,
     date_str = datetime.datetime.now().strftime("%Y%m%d")
     
     if raw_data is None:
-        members = get_guild_members(guild_id, users, concat, bgg)
-        all_games, member_ratings, guild_size = process_guild_ratings(members, bgg)
+        if ratings_file:
+            logger.info(f"Loading member ratings from {ratings_file}...")
+            with open(ratings_file, "r") as f:
+                member_ratings = yaml.safe_load(f)
+            members = list(member_ratings.keys())
+            
+            logger.info(f"Processing results for {len(members)} members...")
+            guild_ratings = collapse_ratings(member_ratings)
+            all_games = []
+            for game_id, ratings in guild_ratings.items():
+                num_ratings = len(ratings)
+                avg_rating = round(mean(ratings), 3)
+                sd_ratings = round(stdev(ratings), 3) if num_ratings > 1 else 0
+                all_games.append((game_id, num_ratings, avg_rating, sd_ratings))
+            all_games.sort(key=lambda x: x[2], reverse=True)
+            guild_size = len(members)
+        else:
+            members = get_guild_members(guild_id, users, concat, bgg)
+            all_games, member_ratings, guild_size = process_guild_ratings(members, bgg)
         
         rating_data = {
             SUMMARY: {GUILD_MEMBER_COUNT: guild_size, TOTAL_GAMES: len(all_games), TIME: str(datetime.datetime.now())},
             MEMBERS: members,
             SORTED_GAMES: all_games
         }
-        export_results(rating_data, member_ratings, date_str)
+        if not ratings_file:
+            export_results(rating_data, member_ratings, date_str)
     else:
         with open(raw_data, "r") as f:
             rating_data = json.load(f)
@@ -392,6 +410,9 @@ if __name__ == "__main__":
       "-r", "--raw",
       help="RAW = guild_data_YYYYMMDD.json to regenerate final data")
     parser.add_argument(
+      "--ratings-file",
+      help="resume from exported member_data_YYYYMMDD.yml file")
+    parser.add_argument(
       "-s", type=int, default=50,
       help="output the top S sleepers, default=50")
     parser.add_argument(
@@ -399,4 +420,5 @@ if __name__ == "__main__":
       help="use provided file of users instead of pulling a new one")
     args = parser.parse_args()
     main(b=args.b, concat=args.concat, guild=args.guild, n=args.n,
-         prune=args.prune, raw_data=args.raw, s=args.s, users=args.users)
+         prune=args.prune, raw_data=args.raw, s=args.s, users=args.users,
+         ratings_file=args.ratings_file)
