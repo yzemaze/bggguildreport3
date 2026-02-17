@@ -3,4 +3,3 @@
 *.cjs
 .env
 /*
-!diff_utils.py

@@ -17,7 +17,6 @@ import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
-from queue import Queue
 from statistics import mean, stdev
 import yaml
 
@@ -127,58 +126,73 @@ def load_members_from_file(filename):
 def get_all_ratings(members, bgg=None):
     """get the ratings for all users in the list members
         returns: a dict (gameid, game name) -> list of ratings
-        and a list of users which data was not available
+        and a list of users which data was not available (invalid usernames)
     """
     bgg = _get_bgg_client(bgg)
     all_member_ratings = dict()
     logger.info("retrieving user ratings ...")
     
-    retry_queue = Queue()
-    failed = list()
+    to_retry = list(members)
+    invalid_usernames = []
+    failed_retrieval = []
     
-    def fetch_user(member):
-        logger.info(f"retrieving data for {member}")
-        try:
-            user_ratings = get_user_ratings(member, bgg=bgg)
-            if not user_ratings:
-                logger.info(f"no ratings retrieved for {member}, queuing for retry")
-                return member, None, True
-            logger.info(f"data retrieved for {member}")
-            return member, user_ratings, False
-        except Exception as e:
-            if str(e) == "Invalid username specified":
-                logger.info(f"invalid username: {member}")
-                return member, None, False
-            else:
-                logger.info(f"error retrieving {member}: {e}")
-                logger.info(f"request queued for retry: {member}")
-                return member, None, True
-
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        results = list(executor.map(fetch_user, members))
-    
-    for member, ratings, should_retry in results:
-        if should_retry:
-            retry_queue.put(member)
-        elif ratings is not None:
-            all_member_ratings[member] = ratings
-        else:
-            failed.append(member)
-
-    while not retry_queue.empty():
-        logger.info(f"{retry_queue.qsize()} members to retry")
-        member = retry_queue.get()
-        logger.info(f"retrieving data for {member}")
-        try:
-            user_ratings = get_user_ratings(member, bgg=bgg)
-            all_member_ratings[member] = user_ratings
-        except Exception:
-            logger.info(f"no data available for {member}")
-            failed.append(member)
+    for attempt in range(1, 4):
+        if not to_retry:
+            break
             
-    logger.info(f"could not retrieve ratings for {len(failed)} users\n"
-                f"{failed}")
-    return all_member_ratings, failed
+        if attempt > 1:
+            wait_time = 300
+            logger.info(f"waiting {wait_time}s before retry attempt {attempt} for {len(to_retry)} members")
+            time.sleep(wait_time)
+            
+        current_batch = to_retry
+        to_retry = []
+        
+        def fetch_user(member):
+            logger.info(f"retrieving data for {member}")
+            try:
+                user_ratings = get_user_ratings(member, bgg=bgg)
+                count = len(user_ratings)
+                logger.info(f"data retrieved for {member}: {count} ratings")
+                if count > 0:
+                  return member, user_ratings, "success"
+                else:
+                  return member, None, "retry"
+            except Exception as e:
+                err_msg = str(e)
+                if "Invalid username specified" in err_msg:
+                    logger.info(f"invalid username: {member}")
+                    return member, None, "invalid"
+                elif "429" in err_msg:
+                    logger.info(f"rate limited (429) for {member}")
+                    return member, None, "retry"
+                else:
+                    logger.info(f"error retrieving {member}: {err_msg}")
+                    return member, None, "retry"
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            results = list(executor.map(fetch_user, current_batch))
+            
+        for member, ratings, status in results:
+            if status == "success":
+                all_member_ratings[member] = ratings
+            elif status == "invalid":
+                if member not in invalid_usernames:
+                    invalid_usernames.append(member)
+            elif status == "retry":
+                if attempt < 3:
+                    to_retry.append(member)
+                else:
+                    logger.info(f"giving up on {member} after 3 attempts")
+                    all_member_ratings[member] = {}
+                    failed_retrieval.append(member)
+            
+    if invalid_usernames:
+        logger.info(f"invalid usernames found ({len(invalid_usernames)}): {invalid_usernames}")
+    if failed_retrieval:
+        logger.info(f"valid members with failed retrieval after 3 attempts ({len(failed_retrieval)}): {failed_retrieval}")
+        
+    return all_member_ratings, invalid_usernames
 
 
 def collapse_ratings(member_ratings):
